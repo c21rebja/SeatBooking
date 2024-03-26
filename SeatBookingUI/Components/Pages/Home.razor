@@ -1,4 +1,8 @@
-﻿@page "/"
+﻿<!-- ********************************************************
+                           C# Code
+********************************************************* -->
+
+@page "/"
 @using SeatBookingAPI.Models
 @inject IHttpClientFactory ClientFactory
 @inject NavigationManager navigationManager
@@ -7,13 +11,15 @@
 
 @code {
     private HttpClient client = new HttpClient();
-    private bool isLoggedIn = true;
-    private User currentUser = new User();
+    private DotNetObjectReference<Home>? dotNetObjectReference;
+
+    private User? currentUser = new User();
     private Office currentOffice = new Office();
+    private Seat selectedSeat = new Seat();
     private IEnumerable<Seat> seats = Array.Empty<Seat>();
 
+    private bool isLoggedIn = true;
     private bool seatModalOpen = false;
-    private Seat selectedSeat = new Seat();
 
     protected override async Task OnInitializedAsync()
     {
@@ -25,13 +31,17 @@
     private async Task GetUser ()
     {
         currentUser = await client.GetFromJsonAsync<User>("api/users/2"); // TEMP hardcoded id
-        await GetOffice(currentUser.OfficeId);
-        await GetSeats(currentUser.OfficeId);       
+        if(currentUser != null)
+        {
+            await GetOffice(currentUser.OfficeId);
+            await GetSeats(currentUser.OfficeId);
+        } 
     }
 
     private async Task GetOffice(long officeId)
     {
-        currentOffice = await client.GetFromJsonAsync<Office>("/api/offices/" + officeId);
+        var office = await client.GetFromJsonAsync<Office>("/api/offices/" + officeId);
+        if (office != null) currentOffice = office;
     }
 
     private async Task GetSeats(long officeId)
@@ -39,41 +49,61 @@
         seats = await client.GetFromJsonAsync<IEnumerable<Seat>>("/api/seats/office/" + officeId) ?? Enumerable.Empty<Seat>(); ;
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender) // if bool is true, it's the first render
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Console.WriteLine(firstRender);
-        int index = 0;
-        foreach(Seat seat in seats)
-        {
-            if (firstRender) {
-                await JS.InvokeVoidAsync("seatManager", seat.SeatId, index, DotNetObjectReference.Create(this));
-                Console.WriteLine("created ref");
-            } else
-            {
-                await JS.InvokeVoidAsync("seatManager", seat.SeatId, index);
-            }
+        // Set the DotNetReferenceObject, to be able to call C# functions from JS
+        if(firstRender) {
+            dotNetObjectReference = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("setDotNetReference", dotNetObjectReference);
+        }
 
+        // Manipulate the DOM for the seats
+        int index = 0;
+        foreach(Seat seat in seats) {
+            await JS.InvokeVoidAsync("seatManager", seat.SeatId, index);
+            await JS.InvokeVoidAsync("changeStatus", seat.SeatId, seat.State);
             index++;
         }
     }
 
+    // Called from JS
+    // Opens modal with the correct seat information
     [JSInvokable("ChooseSeat")]
-    public async void ChooseSeat(long seatId)
+    public void ChooseSeat(long seatId)
     {
-        if(seatId == 0)
+        var seat = seats.FirstOrDefault(s => s.SeatId == seatId);
+        if(seat != null)
         {
-            Console.WriteLine("Seat was null");
-            return;
-        } 
-        selectedSeat = seats.FirstOrDefault(s => s.SeatId == seatId);
-        seatModalOpen = true;
+            selectedSeat = seat;
+            seatModalOpen = true;
+            StateHasChanged();
+        }
     }
 
+    // Updates the seat in the DB, if it has been booked or cancelled
     private async Task UpdateSeat()
     {
+        selectedSeat.State = 1; // Just for testing
         Console.WriteLine("Booked seat!");
+        await JS.InvokeVoidAsync("changeStatus", selectedSeat.SeatId, selectedSeat.State);
+    }
+
+    public bool isDisabled()
+    {
+        if (selectedSeat.State == 0) return false;
+        else return true;
+    }
+
+    public void Dispose()
+    {
+        dotNetObjectReference?.Dispose();
     }
 }
+
+<!-- ********************************************************
+                        JS Script
+********************************************************* -->
+
 
 <!-- Unfortunately this is necessary, since Blazor isn't able to edit the DOM -->
 <script>
@@ -82,14 +112,12 @@
      * I have not seen any signs that the size of the application keeps increasing, but it's worth keeping in mind.
     */
     var dotNetObjectReference; 
+    function setDotNetReference(dotNetRef) {
+        dotNetObjectReference = dotNetRef;
+    }
 
     // Add onclick-functions to all the seats in the layout
-    function seatManager(seatId, index, dotNetRef = null) {
-
-        if (dotNetRef != null) {
-            dotNetObjectReference = dotNetRef;
-            console.log("came through");
-        }
+    function seatManager(seatId, index) {
         const seats = document.getElementsByClassName("seat");
         seats[index].innerHTML = seatId;
         seats[index].setAttribute("onclick", "chooseSeat(" + seatId + ");");
@@ -105,13 +133,17 @@
         var seat = document.getElementById(seatId);
         switch (status) {
             case 1:
-                seat.classList.add("booked");
+                seat.style.fill = "red";
                 break;
             default: // case 0
-                seat.classList.remove("booked");
+                seat.style.fill = "green";
         }
     }
 </script>
+
+<!-- ********************************************************
+                        HTML/Razor
+********************************************************* -->
 
 <PageTitle>Home</PageTitle>
 
@@ -120,7 +152,7 @@
     @((MarkupString)currentOffice.Layout)
 }
 
-@if(seatModalOpen) {
+@if(@seatModalOpen) {
     <section class="modal">
         <h2>Seat Options</h2>
         <p>Current status: 
@@ -130,8 +162,8 @@
                 <span>Booked</span>
             }
         </p>
-        <button @onclick="UpdateSeat">Choose Seat</button> <!-- This should be disabled if the seat is booked -->
-        <button @onclick="() => seatModalOpen = false">Cancel</button>
+        <button @onclick=@UpdateSeat disabled=@isDisabled()>Choose Seat</button>
+        <button @onclick="() => seatModalOpen = false">Close</button>
     </section>
 }
 
