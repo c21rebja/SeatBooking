@@ -55,7 +55,8 @@ namespace SeatBookingAPI.Controllers
             if (seat == null) return NotFound();
 
             if(seat.State != seatDTO.State) seat.State = seatDTO.State;
-
+            if(seat.Layout != seatDTO.Layout) seat.Layout = seatDTO.Layout;
+            
             _context.Seat.Update(seat);
             _context.Entry(seat).State = EntityState.Modified;
 
@@ -73,6 +74,7 @@ namespace SeatBookingAPI.Controllers
             {
                 OfficeId = officeId,
                 State = seatDTO.State,
+                Layout = seatDTO.Layout,
             };
             _context.Seat.Add(seat);
             await _context.SaveChangesAsync();

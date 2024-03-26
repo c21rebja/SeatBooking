@@ -8,6 +8,7 @@ namespace SeatBookingAPI.Models
         public long OfficeId { get; set; }
         public string? Name { get; set; }
         public string? Layout { get; set; }
+        public IEnumerator<Seat> Seats { get; set; }
     }
 
     public class OfficeDTO
