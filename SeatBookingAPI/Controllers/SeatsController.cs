@@ -48,21 +48,22 @@ namespace SeatBookingAPI.Controllers
         // PUT: api/Seats/5
         // Update seat by id
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutSeat(long id, SeatDTO seatDTO)
+        public async Task<ActionResult<Seat>> PutSeat(long id, SeatDTO seatDTO)
         {
             var seat = await _context.Seat.FirstOrDefaultAsync(s => s.SeatId == id);
 
             if (seat == null) return NotFound();
 
-            if(seat.State != seatDTO.State) seat.State = seatDTO.State;
-            if(seat.Layout != seatDTO.Layout) seat.Layout = seatDTO.Layout;
+            if (seat.UserId != seatDTO.UserId) seat.UserId = seatDTO.UserId;
+            if (seat.State != seatDTO.State) seat.State = seatDTO.State;
+            if (seat.Layout != seatDTO.Layout && seatDTO.Layout != null) seat.Layout = seatDTO.Layout;
             
             _context.Seat.Update(seat);
             _context.Entry(seat).State = EntityState.Modified;
 
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return seat;
         }
 
         // POST: api/Seats

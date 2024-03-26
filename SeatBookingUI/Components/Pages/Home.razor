@@ -13,13 +13,14 @@
     private HttpClient client = new HttpClient();
     private DotNetObjectReference<Home>? dotNetObjectReference;
 
-    private User? currentUser = new User();
+    private User currentUser = new User();
     private Office currentOffice = new Office();
     private Seat selectedSeat = new Seat();
     private IEnumerable<Seat> seats = Array.Empty<Seat>();
 
     private bool isLoggedIn = true;
     private bool seatModalOpen = false;
+    private bool loading = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -31,22 +32,17 @@
     private async Task GetUser ()
     {
         currentUser = await client.GetFromJsonAsync<User>("api/users/2"); // TEMP hardcoded id
-        if(currentUser != null)
-        {
-            await GetOffice(currentUser.OfficeId);
-            await GetSeats(currentUser.OfficeId);
-        } 
+        if(currentUser != null) await GetOffice(currentUser.OfficeId);
     }
 
     private async Task GetOffice(long officeId)
     {
         var office = await client.GetFromJsonAsync<Office>("/api/offices/" + officeId);
-        if (office != null) currentOffice = office;
-    }
-
-    private async Task GetSeats(long officeId)
-    {
-        seats = await client.GetFromJsonAsync<IEnumerable<Seat>>("/api/seats/office/" + officeId) ?? Enumerable.Empty<Seat>(); ;
+        if (office != null)
+        {
+            currentOffice = office;
+            if(office.Seats != null) seats = office.Seats;
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -81,11 +77,39 @@
     }
 
     // Updates the seat in the DB, if it has been booked or cancelled
-    private async Task UpdateSeat()
+    private async Task BookSeat()
     {
-        selectedSeat.State = 1; // Just for testing
-        Console.WriteLine("Booked seat!");
+        loading = true;
+        SeatDTO seatDTO = new()
+            {
+                UserId = currentUser.UserId,
+                State = 1
+            };
+        await JS.InvokeVoidAsync("changeStatus", selectedSeat.SeatId, 1);
+        await client.PutAsJsonAsync("/api/seats/" + selectedSeat.SeatId, seatDTO);
+        await ResetSeats();
+    }
+
+    public async Task UnbookSeat()
+    {
+        loading = true;
+        SeatDTO seatDTO = new()
+            {
+                UserId = 0,
+                State = 0
+            };
+        await client.PutAsJsonAsync("/api/seats/" + selectedSeat.SeatId, seatDTO);
         await JS.InvokeVoidAsync("changeStatus", selectedSeat.SeatId, selectedSeat.State);
+        await ResetSeats();
+    }
+
+    public async Task ResetSeats() // Called after both booking and unbooking, to make sure the page is up to date with the DB
+    {
+        seatModalOpen = false;
+        await GetOffice(currentUser.OfficeId);
+        selectedSeat = new Seat();
+
+        loading = false;
     }
 
     public bool isDisabled()
@@ -147,23 +171,45 @@
 
 <PageTitle>Home</PageTitle>
 
-@if(currentOffice.Layout != null)
-{
-    @((MarkupString)currentOffice.Layout)
-}
+<div class="parent">
+    @if (@loading)
+    {
+        <LoadingSymbol></LoadingSymbol>
+    } else
+    {
+        @if (currentOffice.Layout != null)
+        {
+            @((MarkupString)currentOffice.Layout)
+        }
+        @if (@seatModalOpen)
+        {
+            <section class="modal">
+                <h2>Seat Options</h2>
+                <p>
+                    Current status:
+                    @if (selectedSeat.State == 0)
+                    {
+                        <span>Avaliable</span>
+                    }
+                    else
+                    {
+                        <span>Booked</span>
+                    }
+                </p>
+                @if (selectedSeat.UserId == currentUser.UserId)
+                {
+                    <button @onclick=@UnbookSeat>Deselect Seat</button>
+                }
+                else
+                {
+                    <button @onclick=@BookSeat disabled=@isDisabled()>Select Seat</button>
+                }
 
-@if(@seatModalOpen) {
-    <section class="modal">
-        <h2>Seat Options</h2>
-        <p>Current status: 
-            @if(selectedSeat.State == 0) {
-                <span>Avaliable</span>
-            } else {
-                <span>Booked</span>
-            }
-        </p>
-        <button @onclick=@UpdateSeat disabled=@isDisabled()>Choose Seat</button>
-        <button @onclick="() => seatModalOpen = false">Close</button>
-    </section>
-}
+                <button @onclick="() => seatModalOpen = false">Close</button>
+            </section>
+        }
+    }
+</div>
+
+
 

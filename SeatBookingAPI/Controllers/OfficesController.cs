@@ -28,7 +28,9 @@ namespace SeatBookingAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Office>> GetOffice(long id)
         {
-            var office = await _context.Office.FirstOrDefaultAsync(o => o.OfficeId == id);
+            var office = await _context.Office
+                .Include(o => o.Seats)
+                .FirstOrDefaultAsync(o => o.OfficeId == id);
 
             if (office == null) return NotFound();
 

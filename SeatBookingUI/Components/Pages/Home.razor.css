@@ -1,1 +1,9 @@
-﻿
+﻿.modal {
+    
+}
+.parent {
+    position: relative;
+    min-height: 200px;
+    max-width: 500px;
+    margin: auto;
+}

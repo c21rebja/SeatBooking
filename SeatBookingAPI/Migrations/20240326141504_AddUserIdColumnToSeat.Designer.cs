@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SeatBookingAPI.Models;
 
@@ -10,9 +11,11 @@ using SeatBookingAPI.Models;
 namespace SeatBookingAPI.Migrations
 {
     [DbContext(typeof(SeatBookingContext))]
-    partial class SeatBookingContextModelSnapshot : ModelSnapshot
+    [Migration("20240326141504_AddUserIdColumnToSeat")]
+    partial class AddUserIdColumnToSeat
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
