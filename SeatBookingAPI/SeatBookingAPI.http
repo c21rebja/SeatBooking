@@ -1,0 +1,8 @@
+//@SeatBookingAPI_HostAddress = http://localhost:5133
+
+//GET {{SeatBookingAPI_HostAddress}}/weatherforecast/
+//Accept: application/json
+
+###
+
+// This is apprently just for testing the DB. Swagger does this too.

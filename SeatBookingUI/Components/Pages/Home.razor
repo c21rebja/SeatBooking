@@ -1,0 +1,137 @@
+﻿@page "/"
+@using SeatBookingAPI.Models
+@inject IHttpClientFactory ClientFactory
+@inject NavigationManager navigationManager
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+@code {
+    private HttpClient client = new HttpClient();
+    private bool isLoggedIn = true;
+    private User currentUser = new User();
+    private Office currentOffice = new Office();
+    private IEnumerable<Seat> seats = Array.Empty<Seat>();
+
+    private bool seatModalOpen = false;
+    private Seat selectedSeat = new Seat();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!isLoggedIn) navigationManager.NavigateTo("/login");
+        client = ClientFactory.CreateClient("API");
+        await GetUser();
+    }
+
+    private async Task GetUser ()
+    {
+        currentUser = await client.GetFromJsonAsync<User>("api/users/2"); // TEMP hardcoded id
+        await GetOffice(currentUser.OfficeId);
+        await GetSeats(currentUser.OfficeId);       
+    }
+
+    private async Task GetOffice(long officeId)
+    {
+        currentOffice = await client.GetFromJsonAsync<Office>("/api/offices/" + officeId);
+    }
+
+    private async Task GetSeats(long officeId)
+    {
+        seats = await client.GetFromJsonAsync<IEnumerable<Seat>>("/api/seats/office/" + officeId) ?? Enumerable.Empty<Seat>(); ;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) // if bool is true, it's the first render
+    {
+        Console.WriteLine(firstRender);
+        int index = 0;
+        foreach(Seat seat in seats)
+        {
+            if (firstRender) {
+                await JS.InvokeVoidAsync("seatManager", seat.SeatId, index, DotNetObjectReference.Create(this));
+                Console.WriteLine("created ref");
+            } else
+            {
+                await JS.InvokeVoidAsync("seatManager", seat.SeatId, index);
+            }
+
+            index++;
+        }
+    }
+
+    [JSInvokable("ChooseSeat")]
+    public async void ChooseSeat(long seatId)
+    {
+        if(seatId == 0)
+        {
+            Console.WriteLine("Seat was null");
+            return;
+        } 
+        selectedSeat = seats.FirstOrDefault(s => s.SeatId == seatId);
+        seatModalOpen = true;
+    }
+
+    private async Task UpdateSeat()
+    {
+        Console.WriteLine("Booked seat!");
+    }
+}
+
+<!-- Unfortunately this is necessary, since Blazor isn't able to edit the DOM -->
+<script>
+    /* Holds the reference to the c#, to be able to instantiate non-static methods.
+     * Might have issues with garbage collection. 
+     * I have not seen any signs that the size of the application keeps increasing, but it's worth keeping in mind.
+    */
+    var dotNetObjectReference; 
+
+    // Add onclick-functions to all the seats in the layout
+    function seatManager(seatId, index, dotNetRef = null) {
+
+        if (dotNetRef != null) {
+            dotNetObjectReference = dotNetRef;
+            console.log("came through");
+        }
+        const seats = document.getElementsByClassName("seat");
+        seats[index].innerHTML = seatId;
+        seats[index].setAttribute("onclick", "chooseSeat(" + seatId + ");");
+        seats[index].setAttribute("id", seatId);
+    }
+
+    // Call .NET function to handle the information once klicking the seat
+    function chooseSeat(seatId) {
+        dotNetObjectReference.invokeMethodAsync('ChooseSeat', seatId);
+    }
+
+    function changeStatus(seatId, status) {
+        var seat = document.getElementById(seatId);
+        switch (status) {
+            case 1:
+                seat.classList.add("booked");
+                break;
+            default: // case 0
+                seat.classList.remove("booked");
+        }
+    }
+</script>
+
+<PageTitle>Home</PageTitle>
+
+@if(currentOffice.Layout != null)
+{
+    @((MarkupString)currentOffice.Layout)
+}
+
+@if(seatModalOpen) {
+    <section class="modal">
+        <h2>Seat Options</h2>
+        <p>Current status: 
+            @if(selectedSeat.State == 0) {
+                <span>Avaliable</span>
+            } else {
+                <span>Booked</span>
+            }
+        </p>
+        <button @onclick="UpdateSeat">Choose Seat</button> <!-- This should be disabled if the seat is booked -->
+        <button @onclick="() => seatModalOpen = false">Cancel</button>
+    </section>
+}
+

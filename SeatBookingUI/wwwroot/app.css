@@ -1,0 +1,21 @@
+:root {
+    /* Colors */
+    --primary-100: 255, 189, 223;
+    --primary-500: 255, 51, 156;
+    --primary-900: 176, 4, 92;
+    /* Styles */
+    --boxShadow: 0 2px 2px 0px rgba(var(--primary-900), .5);
+    --border: 1px solid rgb(var(--primary-900));
+}
+
+.container {
+    margin: auto;
+    border-radius: 10px;
+    background-color: rgba(var(--primary-100), .5);
+    max-width: 500px;
+}
+.container-heading {
+    font-size: 2rem;
+    font-weight: bold;
+    border-bottom: var(--border);
+}

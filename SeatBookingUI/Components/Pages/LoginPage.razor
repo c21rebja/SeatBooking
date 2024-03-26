@@ -1,0 +1,28 @@
+﻿@page "/login"
+@using SeatBookingAPI.Models
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@inject IHttpClientFactory ClientFactory
+@inject NavigationManager navigationManager
+
+@code {
+    private User currentUser = new User();
+
+    private void Login()
+    {
+        Console.WriteLine(currentUser.UserId);
+        navigationManager.NavigateTo("/");
+    }
+}
+
+<PageTitle>Login</PageTitle>
+
+<div class="container">
+    <EditForm Model=@currentUser FormName="loginForm" OnSubmit=@Login>
+        <label>UserId<InputNumber @bind-Value=@currentUser.UserId /></label>
+        <input type="submit" value="Login">
+    </EditForm>
+</div>
+
+
+

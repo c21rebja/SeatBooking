@@ -1,0 +1,78 @@
+﻿@using SeatBookingAPI.Models
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@inject IHttpClientFactory ClientFactory
+@rendermode InteractiveServer
+
+@code {
+    HttpClient client = new HttpClient();
+    private IEnumerable<Office> offices = Array.Empty<Office>();
+    Office selectedOffice = new Office();
+
+    protected override async Task OnInitializedAsync()
+    {
+        client = ClientFactory.CreateClient("API");
+        await GetOffices();
+    }
+
+    // Get all offices
+    private async Task GetOffices()
+    {
+        offices = await client.GetFromJsonAsync<IEnumerable<Office>>("/api/offices") ?? Enumerable.Empty<Office>(); ;
+    }
+
+    // Update an office when submitting the form
+    private async Task UpdateOffice()
+    {
+        OfficeDTO office = new()
+        {
+            Name = selectedOffice.Name,
+            Layout = selectedOffice.Layout
+        };
+        await client.PutAsJsonAsync("/api/offices/" + selectedOffice.OfficeId, office);
+    }
+
+    private async Task CreateOffice()
+    {
+        OfficeDTO office = new()
+            {
+                Name = selectedOffice.Name,
+                Layout = selectedOffice.Layout
+            };
+        await client.PostAsJsonAsync("/api/offices", office);
+        selectedOffice = new Office();
+        await GetOffices();
+    }
+
+    private async Task DeleteOffice()
+    {
+        await client.DeleteAsync("/api/offices/" + selectedOffice.OfficeId);
+        selectedOffice = new Office();
+        await GetOffices();
+    }
+}
+
+<div @onclick="() => selectedOffice = new Office()">Create new office</div>
+@foreach (Office office in offices)
+{
+    <div @onclick="() => selectedOffice = office">@office.Name</div>
+}
+
+@if (selectedOffice.OfficeId != 0)
+{
+    <EditForm Model=@selectedOffice OnSubmit="@UpdateOffice" FormName="officeForm">
+        <label>Name<InputText @bind-Value=@selectedOffice.Name /></label>
+        <label>Layout<InputTextArea @bind-Value=@selectedOffice.Layout /></label>
+        <input type="submit" value="Save" />
+        <input type="button" value="Delete" @onclick=DeleteOffice />
+    </EditForm>
+}
+
+@if (selectedOffice.OfficeId == 0)
+{
+    <EditForm Model="@selectedOffice" OnSubmit="@CreateOffice" FormName="newOfficeForm">
+        <label>Name<InputText @bind-Value=@selectedOffice.Name /></label>
+        <label>Layout<InputTextArea @bind-Value=@selectedOffice.Layout /></label>
+        <input type="submit" value="Create" />
+    </EditForm>
+}

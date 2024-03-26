@@ -1,0 +1,70 @@
+﻿@page "/user"
+@using SeatBookingAPI.Models
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@inject IHttpClientFactory ClientFactory
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+@code {
+    HttpClient client = new HttpClient();
+    private User currentUser = new User();
+    private IEnumerable<Office> offices = Array.Empty<Office>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        client = ClientFactory.CreateClient("API");
+        await GetUser();
+        await GetOffices();
+    }
+
+    private async Task GetUser()
+    {
+        currentUser = await client.GetFromJsonAsync<User>("api/users/2"); // TEMP hardcoded id of user
+    }
+
+    private async Task GetOffices()
+    {
+        offices = await client.GetFromJsonAsync<IEnumerable<Office>>("/api/offices") ?? Enumerable.Empty<Office>(); ;
+    }
+
+    private async Task UpdateUser()
+    {
+        UserDTO user = new()
+        {
+            Name = currentUser.Name,
+            OfficeId = currentUser.OfficeId
+        };
+        await client.PutAsJsonAsync("/api/users/" + currentUser.UserId, user);
+        Console.WriteLine("put");
+    }
+
+    private void Logout()
+    {
+        // Do logic to logout
+        navigationManager.NavigateTo("/login");
+    }
+}
+
+<PageTitle>User</PageTitle>
+
+<div class="container">
+    <h1 class="container-heading">User Settings</h1>
+    <EditForm Model=@currentUser OnSubmit=@UpdateUser>
+        <label>
+            Username
+            <InputText @bind-Value=@currentUser.Name />
+        </label>
+        <label>
+            Office
+            <InputSelect @bind-Value=@currentUser.OfficeId>
+                @foreach (Office office in offices)
+                {
+                    <option value="@office.OfficeId">@office.Name</option>
+                }
+            </InputSelect>
+        </label>
+        <input type="submit" value="Update Settings">
+    </EditForm>
+    <button @onclick=@Logout>Logout</button>
+</div>

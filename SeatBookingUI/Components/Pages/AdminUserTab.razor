@@ -1,0 +1,109 @@
+﻿@using SeatBookingAPI.Models
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@inject IHttpClientFactory ClientFactory
+@rendermode InteractiveServer
+
+@code {
+    HttpClient client = new HttpClient();
+    private IEnumerable<User> users = Array.Empty<User>();
+    private IEnumerable<Office> offices = Array.Empty<Office>();
+    User selectedUser = new User();
+
+    protected override async Task OnInitializedAsync()
+    {
+        client = ClientFactory.CreateClient("API");
+        await GetUsers();
+        await GetOffices();
+    }
+
+    private async Task GetUsers()
+    {
+        users = await client.GetFromJsonAsync<IEnumerable<User>>("/api/users") ?? Enumerable.Empty<User>(); ;
+
+    }
+    private async Task GetOffices()
+    {
+        offices = await client.GetFromJsonAsync<IEnumerable<Office>>("/api/offices") ?? Enumerable.Empty<Office>(); ;
+    }
+
+    // Update an office when submitting the form
+    private async Task UpdateUser()
+    {
+        UserDTO user = new()
+        {
+              Name = selectedUser.Name,
+              OfficeId = selectedUser.OfficeId,
+        };
+        await client.PutAsJsonAsync("/api/users/" + selectedUser.UserId, user);
+        await client.PutAsJsonAsync("/api/users/" + selectedUser.UserId + "/admin", new UserRole { Role = selectedUser.Role });
+    }
+
+    private async Task CreateUser()
+    {
+        UserDTO user = new()
+            {
+                Name = selectedUser.Name,
+                OfficeId = selectedUser.OfficeId
+            };
+        await client.PostAsJsonAsync("/api/users", user);
+        selectedUser = new User();
+        await GetUsers();
+    }
+
+    private async Task DeleteUser()
+    {
+        await client.DeleteAsync("/api/users/" + selectedUser.UserId);
+        selectedUser = new User();
+        await GetUsers();
+    }
+}
+
+<div @onclick="() => selectedUser = new User()">Create new user</div>
+@foreach (User user in users)
+{
+    <div @onclick="() => selectedUser = user">@user.Name</div>
+}
+
+@if (selectedUser.UserId != 0)
+{
+    <EditForm Model=@selectedUser OnSubmit="@UpdateUser" FormName="userForm">
+        <label>Name<InputText @bind-Value=@selectedUser.Name /></label>
+        <label>
+            Office
+            <InputSelect @bind-Value=@selectedUser.OfficeId>
+                @foreach (Office office in offices)
+                {
+                    <option value="@office.OfficeId">@office.Name</option>
+                }
+            </InputSelect>
+        </label>
+        <label>
+            Role
+            <InputSelect @bind-Value=@selectedUser.Role>
+                <option value="0">User</option>
+                <option value="1">Admin</option>
+            </InputSelect>
+        </label>
+        <input type="submit" value="Save" />
+        <input type="button" value="Delete" @onclick="DeleteUser" />
+    </EditForm>
+}
+
+@if(selectedUser.UserId == 0)
+{
+    <EditForm Model="@selectedUser" OnSubmit="@CreateUser" FormName="newUserForm">
+        <label>Name<InputText @bind-Value=@selectedUser.Name /></label>
+        <label>
+            Office
+            <InputSelect @bind-Value=@selectedUser.OfficeId>
+                <option value="0" selected disabled>-- Select an office --</option>
+                @foreach (Office office in offices)
+                {
+                    <option value="@office.OfficeId">@office.Name</option>
+                }
+            </InputSelect>
+        </label>
+        <input type="submit" value="Create" />
+    </EditForm>    
+}
