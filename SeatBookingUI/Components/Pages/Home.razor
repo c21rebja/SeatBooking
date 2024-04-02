@@ -4,6 +4,7 @@
 
 @page "/"
 @using SeatBookingAPI.Models
+@using System.Text.RegularExpressions
 @inject IHttpClientFactory ClientFactory
 @inject NavigationManager navigationManager
 @inject IJSRuntime JS
@@ -21,6 +22,7 @@
     private bool isLoggedIn = true;
     private bool seatModalOpen = false;
     private bool loading = true;
+    private string LayoutContent = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -42,7 +44,31 @@
         {
             currentOffice = office;
             if(office.Seats != null) seats = office.Seats;
+            SetupLayout();
+            loading = false;
         }
+    }
+
+    // Adds necessary onclick functions and classes to the seats
+    private void SetupLayout ()
+    {
+        LayoutContent = currentOffice.Layout!;
+        string allSeats = "";
+        foreach (Seat seat in seats)
+        {
+            if (seat.Layout != null) {
+                string seatContent = seat.Layout;
+                if (seatContent != null)
+                {
+                    seatContent = seatContent.Replace("#", "onclick='chooseSeat(" + seat.SeatId + ");' b-oxkldxxbnv tabindex='0'"); // The last line is to get the CSS to recognize the classes
+                    if (seat.State == 0) seatContent = seatContent.Replace("seat", "seat available");
+                    else if (seat.State == 1 && seat.UserId == currentUser.UserId) seatContent = seatContent.Replace("seat", "seat booked-by-user");
+                    else seatContent = seatContent.Replace("seat", "seat booked");
+                }
+                allSeats += seatContent;
+            }
+        }
+        LayoutContent = LayoutContent.Replace("#", allSeats);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -51,14 +77,6 @@
         if(firstRender) {
             dotNetObjectReference = DotNetObjectReference.Create(this);
             await JS.InvokeVoidAsync("setDotNetReference", dotNetObjectReference);
-        }
-
-        // Manipulate the DOM for the seats
-        int index = 0;
-        foreach(Seat seat in seats) {
-            await JS.InvokeVoidAsync("seatManager", seat.SeatId, index);
-            await JS.InvokeVoidAsync("changeStatus", seat.SeatId, seat.State);
-            index++;
         }
     }
 
@@ -77,37 +95,27 @@
     }
 
     // Updates the seat in the DB, if it has been booked or cancelled
-    private async Task BookSeat()
+    private async Task BookSeat(bool isBooking)
     {
         loading = true;
-        SeatDTO seatDTO = new()
-            {
-                UserId = currentUser.UserId,
-                State = 1
-            };
-        await JS.InvokeVoidAsync("changeStatus", selectedSeat.SeatId, 1);
-        await client.PutAsJsonAsync("/api/seats/" + selectedSeat.SeatId, seatDTO);
-        await ResetSeats();
-    }
 
-    public async Task UnbookSeat()
-    {
-        loading = true;
-        SeatDTO seatDTO = new()
-            {
-                UserId = 0,
-                State = 0
-            };
-        await client.PutAsJsonAsync("/api/seats/" + selectedSeat.SeatId, seatDTO);
-        await JS.InvokeVoidAsync("changeStatus", selectedSeat.SeatId, selectedSeat.State);
-        await ResetSeats();
-    }
+        int state = 0; // Unbooking seat
+        long userId = 0;
+        if (isBooking) { // Booking seat
+            state = 1; 
+            userId = currentUser.UserId;
+        }
 
-    public async Task ResetSeats() // Called after both booking and unbooking, to make sure the page is up to date with the DB
-    {
+        SeatDTO seatDTO = new() {
+            UserId = userId,
+            State = state,
+        };
+        await client.PutAsJsonAsync("/api/seats/" + selectedSeat.SeatId, seatDTO);
+
         seatModalOpen = false;
-        await GetOffice(currentUser.OfficeId);
+        await GetOffice(currentUser.OfficeId); // TODO: This can be done better
         selectedSeat = new Seat();
+        SetupLayout();
 
         loading = false;
     }
@@ -140,28 +148,10 @@
         dotNetObjectReference = dotNetRef;
     }
 
-    // Add onclick-functions to all the seats in the layout
-    function seatManager(seatId, index) {
-        const seats = document.getElementsByClassName("seat");
-        seats[index].innerHTML = seatId;
-        seats[index].setAttribute("onclick", "chooseSeat(" + seatId + ");");
-        seats[index].setAttribute("id", seatId);
-    }
-
     // Call .NET function to handle the information once klicking the seat
     function chooseSeat(seatId) {
+        console.log("clicked seat");
         dotNetObjectReference.invokeMethodAsync('ChooseSeat', seatId);
-    }
-
-    function changeStatus(seatId, status) {
-        var seat = document.getElementById(seatId);
-        switch (status) {
-            case 1:
-                seat.style.fill = "red";
-                break;
-            default: // case 0
-                seat.style.fill = "green";
-        }
     }
 </script>
 
@@ -171,41 +161,43 @@
 
 <PageTitle>Home</PageTitle>
 
-<div class="parent">
-    @if (@loading)
-    {
+<div class="container">
+    @if (@loading) {
         <LoadingSymbol></LoadingSymbol>
-    } else
-    {
-        @if (currentOffice.Layout != null)
+    } else {
+        @if (LayoutContent != "")
         {
-            @((MarkupString)currentOffice.Layout)
+            <div class="layout-content">@((MarkupString)LayoutContent)</div>
         }
         @if (@seatModalOpen)
         {
             <section class="modal">
-                <h2>Seat Options</h2>
-                <p>
-                    Current status:
-                    @if (selectedSeat.State == 0)
-                    {
-                        <span>Avaliable</span>
-                    }
-                    else
-                    {
-                        <span>Booked</span>
-                    }
-                </p>
-                @if (selectedSeat.UserId == currentUser.UserId)
-                {
-                    <button @onclick=@UnbookSeat>Deselect Seat</button>
-                }
-                else
-                {
-                    <button @onclick=@BookSeat disabled=@isDisabled()>Select Seat</button>
-                }
+                <div>
+                    <h2 class="container-heading">Seat Options</h2>
+                    <div class="modal-content">
+                        <p>
+                            Current status:
+                            @if (selectedSeat.State == 0)
+                            {
+                                <span>Avaliable</span>
+                            }
+                            else
+                            {
+                                <span>Booked</span>
+                            }
+                        </p>
+                        @if (selectedSeat.UserId == currentUser.UserId)
+                        {
+                            <button @onclick="() => BookSeat(false)" class="btn">Deselect Seat</button>
+                        }
+                        else
+                        {
+                            <button @onclick="() => BookSeat(true)" disabled=@isDisabled() class="btn">Select Seat</button>
+                        }
 
-                <button @onclick="() => seatModalOpen = false">Close</button>
+                        <button @onclick="() => seatModalOpen = false" class="btn">Close</button>
+                    </div>
+                </div>
             </section>
         }
     }

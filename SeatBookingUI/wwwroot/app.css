@@ -19,3 +19,16 @@
     font-weight: bold;
     border-bottom: var(--border);
 }
+
+.btn {
+    background-color: rgb(var(--primary-500));
+    padding: .7em;
+    border: none;
+    border-radius: 5px;
+    margin: .5em;
+}
+.btn:not([disabled]):hover {
+    background-color: rgb(var(--primary-900));
+    color: white;
+    box-shadow: var(--box-shadow);
+}
