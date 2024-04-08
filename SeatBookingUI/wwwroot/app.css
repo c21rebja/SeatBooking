@@ -17,12 +17,17 @@ body, input, button, select {
     font-weight: 400;
     font-style: normal;
 }
-
 textarea {
     font-family: "Reddit Mono", monospace;
     font-size: .8rem;
     font-weight: 300;
     font-style: normal;
+}
+select, input, textarea {
+    background-color: white;
+    border: none;
+    border-radius: 5px;
+    padding: .5em;
 }
 form {
     padding: 1em 2em;
