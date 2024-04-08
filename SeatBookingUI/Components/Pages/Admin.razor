@@ -13,8 +13,7 @@
 
 <div class="container">
     <div class="container-heading">
-        <button class="heading" @onclick="() => ChangeTab(0)">Offices</button>
-        <button class="heading" @onclick="() => ChangeTab(1)">Users</button>
+        <button class="heading" @onclick="() => ChangeTab(0)">Offices</button><button class="heading" @onclick="() => ChangeTab(1)">Users</button>
     </div>
     @if(activeTab == 0) { <AdminOfficeTab></AdminOfficeTab> }
     @if(activeTab == 1) { <AdminUserTab></AdminUserTab> }

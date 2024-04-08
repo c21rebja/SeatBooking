@@ -15,6 +15,7 @@ namespace SeatBookingAPI.Models
 
     public class SeatDTO
     {
+        public long OfficeId { get; set; }
         public long UserId { get; set; }
         public int State { get; set; }
         public string? Layout { get; set; }

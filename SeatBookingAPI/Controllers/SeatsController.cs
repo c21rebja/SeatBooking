@@ -69,11 +69,11 @@ namespace SeatBookingAPI.Controllers
         // POST: api/Seats
         // Create new seat
         [HttpPost]
-        public async Task<ActionResult<Seat>> PostSeat(long officeId, SeatDTO seatDTO)
+        public async Task<ActionResult<Seat>> PostSeat(SeatDTO seatDTO)
         {
             Seat seat = new()
             {
-                OfficeId = officeId,
+                OfficeId = seatDTO.OfficeId,
                 State = seatDTO.State,
                 Layout = seatDTO.Layout,
             };
