@@ -2,6 +2,7 @@
 @using System.Text.Json
 @using System.Text.Json.Serialization
 @inject IHttpClientFactory ClientFactory
+@inject NavigationManager navMan
 @rendermode InteractiveServer
 
 @code {
@@ -36,7 +37,9 @@
     // Combines the seats and the office layout to display
     private void SetupLayout()
     {
-        string allSeats = "";
+        if(selectedOffice.Layout != null)
+        {
+            string allSeats = "";
         foreach (Seat seat in selectedOffice.Seats)
         {
             if (seat.Layout != null)
@@ -45,6 +48,8 @@
             }
         }
         LayoutContent = selectedOffice.Layout.Replace("#", allSeats);
+        }
+        
     }
 
     /* Office settings */
@@ -57,6 +62,7 @@
             Layout = selectedOffice.Layout
         };
         await client.PutAsJsonAsync("/api/offices/" + selectedOffice.OfficeId, office);
+        await Refresh(true);
     }
 
     private async Task CreateOffice()
@@ -68,14 +74,14 @@
             };
         await client.PostAsJsonAsync("/api/offices", office);
         selectedOffice = new Office();
-        await GetOffices();
+        await Refresh(false);
     }
 
     private async Task DeleteOffice()
     {
         await client.DeleteAsync("/api/offices/" + selectedOffice.OfficeId);
         selectedOffice = new Office();
-        await GetOffices();
+        await Refresh(false);
     }
 
     /* Seat settings */
@@ -88,6 +94,7 @@
                 UserId = seat.UserId
             };
         await client.PutAsJsonAsync("/api/seats/" + seat.SeatId, seat);
+        await Refresh(true);
     }
 
     private async Task CreateSeat()
@@ -100,63 +107,82 @@
             };
         await client.PostAsJsonAsync("/api/seats", seat);
         newSeat = new Seat();
-        StateHasChanged();
+        await Refresh(true);
     }
 
     private async Task DeleteSeat(long seatId)
     {
         await client.DeleteAsync("/api/seats/" + seatId);
-        StateHasChanged();
+        await Refresh(true);
     }
-}
 
-<!-- Menu to select office -->
-<div @onclick="() => selectedOffice = new Office()">Create new office</div>
-@foreach (Office office in offices)
-{
-    <div @onclick="() => SelectOffice(office.OfficeId)">@office.Name</div>
-}
-
-<!-- If no office is selected -->
-@if (selectedOffice.OfficeId == 0)
-{
-    <EditForm Model="@selectedOffice" OnSubmit="@CreateOffice" FormName="newOfficeForm">
-        <label>Name<InputText @bind-Value=@selectedOffice.Name /></label>
-        <label>Layout<InputTextArea @bind-Value=@selectedOffice.Layout /></label>
-        <input type="submit" value="Create" />
-    </EditForm>
-}
-
-<!-- If an office is selected -->
-@if (selectedOffice.OfficeId != 0)
-{
-    <!-- Edit office form -->
-    <EditForm Model=@selectedOffice OnSubmit="@UpdateOffice" FormName="officeForm">
-        <label>Name<InputText @bind-Value=@selectedOffice.Name /></label>
-        <label>Layout<InputTextArea @bind-Value=@selectedOffice.Layout /></label>
-        <input type="submit" value="Save" />
-        <input type="button" value="Delete" @onclick=DeleteOffice />
-    </EditForm>
-
-    <!-- Edit seats form -->
-    @foreach(Seat seat in selectedOffice.Seats)
+    /* Refresh after updating */
+    private async Task Refresh(bool saveCurrentSelection)
     {
-        <div>Seat @seat.SeatId</div>
-        <EditForm Model=@seat OnSubmit="() => UpdateSeat(seat)">
-            <label>Layout<InputTextArea @bind-Value=@seat.Layout /></label>
-            <input type="submit" value="Save" />
-            <input type="button" value="Delete" @onclick="() => DeleteSeat(seat.SeatId)"/>
-        </EditForm>
-    }
-    <div>New Seat</div>
-    <EditForm Model=@newSeat OnSubmit="@CreateSeat">
-        <label>Layout<InputTextArea @bind-Value=@newSeat.Layout /></label>
-        <input type="submit" value="Create" />
-    </EditForm>
+        long officeId = selectedOffice.OfficeId;
+        await GetOffices();
+        if(saveCurrentSelection) await SelectOffice(officeId);
 
-    <!-- Box to display the selected office's layout -->
-    @if (selectedOffice.Layout != null)
-    {
-        <div>@((MarkupString)LayoutContent)</div>
+        // Todo: The localstorage thing to save which office was selected
     }
 }
+<div class="container-content">
+    <section>
+        <!-- Menu to select office -->
+        <div class="listitem" @onclick="() => selectedOffice = new Office()">Create new office</div>
+        @foreach (Office office in offices)
+        {
+            <div class="listitem" @onclick="() => SelectOffice(office.OfficeId)">@office.Name</div>
+        }
+    </section>
+
+    <section>
+        <!-- If no office is selected -->
+        @if (selectedOffice.OfficeId == 0)
+        {
+            <EditForm Model="@selectedOffice" OnSubmit="@CreateOffice" FormName="newOfficeForm">
+                <label>Name<InputText @bind-Value=@selectedOffice.Name /></label>
+                <label>Layout<InputTextArea @bind-Value=@selectedOffice.Layout /></label>
+                <input class="btn" type="submit" value="Create" />
+            </EditForm>
+        }
+
+        <!-- If an office is selected -->
+        @if (selectedOffice.OfficeId != 0)
+        {
+            <!-- Edit office form -->
+            <EditForm Model=@selectedOffice OnSubmit="@UpdateOffice" FormName="officeForm">
+                <label>Name<InputText @bind-Value=@selectedOffice.Name /></label>
+                <label>Layout<InputTextArea @bind-Value=@selectedOffice.Layout /></label>
+                <input class="btn" type="submit" value="Save" />
+                <input class="btn" type="button" value="Delete" @onclick=DeleteOffice />
+            </EditForm>
+
+            <div class="sectionbreak"></div>
+
+            <!-- Edit seats form -->
+            @foreach (Seat seat in selectedOffice.Seats)
+            {
+                <EditForm Model=@seat OnSubmit="() => UpdateSeat(seat)">
+                    <label>Layout - Seat @seat.SeatId<InputTextArea @bind-Value=@seat.Layout /></label>
+                    <input class="btn" type="submit" value="Save" />
+                    <input class="btn" type="button" value="Delete" @onclick="() => DeleteSeat(seat.SeatId)" />
+                </EditForm>
+            }
+
+            <div class="sectionbreak"></div>
+
+            <div>New Seat</div>
+            <EditForm Model=@newSeat OnSubmit="@CreateSeat">
+                <label>Layout<InputTextArea @bind-Value=@newSeat.Layout /></label>
+                <input type="submit" value="Create" />
+            </EditForm>
+
+            <!-- Box to display the selected office's layout -->
+            @if (selectedOffice.Layout != null)
+            {
+                <div>@((MarkupString)LayoutContent)</div>
+            }
+        }
+    </section>
+</div>

@@ -18,6 +18,7 @@
     private Office currentOffice = new Office();
     private Seat selectedSeat = new Seat();
     private IEnumerable<Seat> seats = Array.Empty<Seat>();
+    private IEnumerable<Office> offices = Array.Empty<Office>();
 
     private bool isLoggedIn = true;
     private bool seatModalOpen = false;
@@ -29,6 +30,7 @@
         if (!isLoggedIn) navigationManager.NavigateTo("/login");
         client = ClientFactory.CreateClient("API");
         await GetUser();
+        await GetOffices();
     }
 
     private async Task GetUser ()
@@ -39,7 +41,7 @@
 
     private async Task GetOffice(long officeId)
     {
-        var office = await client.GetFromJsonAsync<Office>("/api/offices/" + officeId);
+        Office office = await client.GetFromJsonAsync<Office>("/api/offices/" + officeId);
         if (office != null)
         {
             currentOffice = office;
@@ -49,26 +51,39 @@
         }
     }
 
+    private async Task GetOffices()
+    {
+        offices = await client.GetFromJsonAsync<IEnumerable<Office>>("/api/offices") ?? Enumerable.Empty<Office>(); ;
+    }
+
+    private async Task ChangeOffice(ChangeEventArgs e)
+    {
+        await GetOffice(Convert.ToInt64(e.Value));
+    }
+
     // Adds necessary onclick functions and classes to the seats
     private void SetupLayout ()
     {
-        LayoutContent = currentOffice.Layout!;
-        string allSeats = "";
-        foreach (Seat seat in seats)
+        if(currentOffice.Layout != null)
         {
-            if (seat.Layout != null) {
-                string seatContent = seat.Layout;
-                if (seatContent != null)
-                {
-                    seatContent = seatContent.Replace("#", "onclick='chooseSeat(" + seat.SeatId + ");' b-oxkldxxbnv tabindex='0'"); // The last line is to get the CSS to recognize the classes
-                    if (seat.State == 0) seatContent = seatContent.Replace("seat", "seat available");
-                    else if (seat.State == 1 && seat.UserId == currentUser.UserId) seatContent = seatContent.Replace("seat", "seat booked-by-user");
-                    else seatContent = seatContent.Replace("seat", "seat booked");
+            LayoutContent = currentOffice.Layout!;
+            string allSeats = "";
+            foreach (Seat seat in seats)
+            {
+                if (seat.Layout != null) {
+                    string seatContent = seat.Layout;
+                    if (seatContent != null)
+                    {
+                        seatContent = seatContent.Replace("#", "onclick='chooseSeat(" + seat.SeatId + ");' b-oxkldxxbnv tabindex='0'"); // The last line is to get the CSS to recognize the classes
+                        if (seat.State == 0) seatContent = seatContent.Replace("seat", "seat available");
+                        else if (seat.State == 1 && seat.UserId == currentUser.UserId) seatContent = seatContent.Replace("seat", "seat booked-by-user");
+                        else seatContent = seatContent.Replace("seat", "seat booked");
+                    }
+                    allSeats += seatContent;
                 }
-                allSeats += seatContent;
             }
+            LayoutContent = LayoutContent.Replace("#", allSeats);
         }
-        LayoutContent = LayoutContent.Replace("#", allSeats);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -126,6 +141,12 @@
         else return true;
     }
 
+    public bool isSelected(long officeId)
+    {
+        if (officeId == currentOffice.OfficeId) return true;
+        else return false;
+    }
+
     public void Dispose()
     {
         dotNetObjectReference?.Dispose();
@@ -165,6 +186,19 @@
     @if (@loading) {
         <LoadingSymbol></LoadingSymbol>
     } else {
+        @if (offices.Count() != 0)
+        {
+            <div>
+                <select @onchange="ChangeOffice">
+                    <optgroup label="Offices">
+                        @foreach (Office office in offices)
+                        {
+                            <option value="@office.OfficeId" selected="() => isSelected(office.OfficeId)">@office.Name</option>
+                        }
+                    </optgroup>
+                </select>
+            </div>
+        }
         @if (LayoutContent != "")
         {
             <div class="layout-content">@((MarkupString)LayoutContent)</div>
@@ -202,6 +236,3 @@
         }
     }
 </div>
-
-
-

@@ -1,29 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Reddit+Mono:wght@200..900&display=swap');
+
 :root {
     /* Colors */
     --primary-100: 255, 189, 223;
-    --primary-500: 255, 51, 156;
+    --primary-500: 255, 142, 207;
     --primary-900: 176, 4, 92;
     /* Styles */
     --boxShadow: 0 2px 2px 0px rgba(var(--primary-900), .5);
     --border: 1px solid rgb(var(--primary-900));
 }
 
+body, input, button, select {
+    font-family: "Quicksand", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+}
+
+textarea {
+    font-family: "Reddit Mono", monospace;
+    font-size: .8rem;
+    font-weight: 300;
+    font-style: normal;
+}
+form {
+    padding: 1em 2em;
+}
+
 .container {
     margin: auto;
     border-radius: 10px;
     background-color: rgba(var(--primary-100), .5);
-    max-width: 500px;
+    max-width: 1000px;
 }
 .container-heading {
     font-size: 2rem;
-    font-weight: bold;
     border-bottom: var(--border);
+    font-weight: normal;
+}
+
+label {
+    display: grid;
+    grid-template-columns: 1fr;
 }
 
 .btn {
-    background-color: rgb(var(--primary-500));
     padding: .7em;
     border: none;
+    background-color: rgb(var(--primary-500));
     border-radius: 5px;
     margin: .5em;
 }

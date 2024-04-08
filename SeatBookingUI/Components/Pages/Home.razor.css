@@ -1,20 +1,37 @@
 ﻿.available {
     fill: green;
+    background-color: green;
 }
 .available:hover, .available:focus {
     fill: darkgreen;
+    background-color: darkgreen;
 }
 .booked {
     fill: red;
+    background-color: red;
 }
 .booked:hover, .booked:focus {
     fill: darkred;
+    background-color: darkred;
 }
 .booked-by-user {
     fill: orange;
+    background-color: orange;
 }
 .booked-by-user:hover, .booked-by-user:focus {
     fill: darkorange;
+    background-color: darkorange;
+}
+
+select {
+    font-size: 2rem;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+optgroup {
+    font-size: 1rem;
 }
 
 .layout-content {

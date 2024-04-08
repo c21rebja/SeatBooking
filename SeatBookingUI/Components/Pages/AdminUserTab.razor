@@ -59,10 +59,10 @@
     }
 }
 
-<div @onclick="() => selectedUser = new User()">Create new user</div>
+<div class="listitem" @onclick="() => selectedUser = new User()">Create new user</div>
 @foreach (User user in users)
 {
-    <div @onclick="() => selectedUser = user">@user.Name</div>
+    <div class="listitem" @onclick="() => selectedUser = user">@user.Name</div>
 }
 
 @if (selectedUser.UserId != 0)
