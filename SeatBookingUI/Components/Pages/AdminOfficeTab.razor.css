@@ -20,3 +20,11 @@
 .listitem:hover {
     border: var(--border);
 }
+
+.preview-box {
+    border-top: var(--border);
+    padding: 1em;
+}
+.preview-box h2 {
+    text-align: center;
+}

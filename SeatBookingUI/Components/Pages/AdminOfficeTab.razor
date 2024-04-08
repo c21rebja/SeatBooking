@@ -177,11 +177,18 @@
                 <input class="btn" type="submit" value="Add" />
             </EditForm>
 
-            <!-- Box to display the selected office's layout -->
-            @if (selectedOffice.Layout != null)
-            {
-                <div>@((MarkupString)LayoutContent)</div>
-            }
         }
     </section>
 </div>
+@if(selectedOffice.OfficeId != 0)
+{
+    <div class="preview-box">
+        <!-- Box to display the selected office's layout -->
+        <h2 class="heading">Preview</h2>
+        @if (selectedOffice.Layout != null)
+        {
+            <div>@((MarkupString)LayoutContent)</div>
+        }
+    </div>
+}
+
