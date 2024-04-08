@@ -1,0 +1,18 @@
+﻿.container-content {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+}
+.container-content > section:first-child {
+    border-right: var(--border);
+}
+
+.listitem {
+    cursor: pointer;
+    padding: .5em;
+    margin: .5em;
+    border-radius: 5px;
+    border: 1px solid transparent;
+}
+.listitem:hover {
+    border: var(--border);
+}

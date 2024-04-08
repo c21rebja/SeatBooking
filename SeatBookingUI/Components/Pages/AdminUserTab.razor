@@ -59,51 +59,57 @@
     }
 }
 
-<div class="listitem" @onclick="() => selectedUser = new User()">Create new user</div>
-@foreach (User user in users)
-{
-    <div class="listitem" @onclick="() => selectedUser = user">@user.Name</div>
-}
+<div class="container-content">
+    <section>
+        <div class="listitem" @onclick="() => selectedUser = new User()">Create new user</div>
+        @foreach (User user in users)
+        {
+            <div class="listitem" @onclick="() => selectedUser = user">@user.Name</div>
+        }
+    </section>
 
-@if (selectedUser.UserId != 0)
-{
-    <EditForm Model=@selectedUser OnSubmit="@UpdateUser" FormName="userForm">
-        <label>Name<InputText @bind-Value=@selectedUser.Name /></label>
-        <label>
-            Office
-            <InputSelect @bind-Value=@selectedUser.OfficeId>
-                @foreach (Office office in offices)
-                {
-                    <option value="@office.OfficeId">@office.Name</option>
-                }
-            </InputSelect>
-        </label>
-        <label>
-            Role
-            <InputSelect @bind-Value=@selectedUser.Role>
-                <option value="0">User</option>
-                <option value="1">Admin</option>
-            </InputSelect>
-        </label>
-        <input type="submit" value="Save" />
-        <input type="button" value="Delete" @onclick="DeleteUser" />
-    </EditForm>
-}
+    <section>
+        @if (selectedUser.UserId != 0)
+        {
+            <EditForm Model=@selectedUser OnSubmit="@UpdateUser" FormName="userForm">
+                <label>Name<InputText @bind-Value=@selectedUser.Name /></label>
+                <label>
+                    Office
+                    <InputSelect @bind-Value=@selectedUser.OfficeId>
+                        @foreach (Office office in offices)
+                        {
+                            <option value="@office.OfficeId">@office.Name</option>
+                        }
+                    </InputSelect>
+                </label>
+                <label>
+                    Role
+                    <InputSelect @bind-Value=@selectedUser.Role>
+                        <option value="0">User</option>
+                        <option value="1">Admin</option>
+                    </InputSelect>
+                </label>
+                <input type="submit" value="Save" />
+                <input type="button" value="Delete" @onclick="DeleteUser" />
+            </EditForm>
+        }
 
-@if(selectedUser.UserId == 0)
-{
-    <EditForm Model="@selectedUser" OnSubmit="@CreateUser" FormName="newUserForm">
-        <label>Name<InputText @bind-Value=@selectedUser.Name /></label>
-        <label>
-            Office
-            <InputSelect @bind-Value=@selectedUser.OfficeId>
-                <option value="0" selected disabled>-- Select an office --</option>
-                @foreach (Office office in offices)
-                {
-                    <option value="@office.OfficeId">@office.Name</option>
-                }
-            </InputSelect>
-        </label>
-        <input type="submit" value="Create" />
-    </EditForm>    
-}
+        @if (selectedUser.UserId == 0)
+        {
+            <EditForm Model="@selectedUser" OnSubmit="@CreateUser" FormName="newUserForm">
+                <label>Name<InputText @bind-Value=@selectedUser.Name /></label>
+                <label>
+                    Office
+                    <InputSelect @bind-Value=@selectedUser.OfficeId>
+                        <option value="0" selected disabled>-- Select an office --</option>
+                        @foreach (Office office in offices)
+                        {
+                            <option value="@office.OfficeId">@office.Name</option>
+                        }
+                    </InputSelect>
+                </label>
+                <input type="submit" value="Create" />
+            </EditForm>
+        }
+    </section>
+</div>

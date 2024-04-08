@@ -172,10 +172,9 @@
 
             <div class="sectionbreak"></div>
 
-            <div>New Seat</div>
             <EditForm Model=@newSeat OnSubmit="@CreateSeat">
-                <label>Layout<InputTextArea @bind-Value=@newSeat.Layout /></label>
-                <input type="submit" value="Create" />
+                <label>Add New Seat Layout<InputTextArea @bind-Value=@newSeat.Layout /></label>
+                <input class="btn" type="submit" value="Add" />
             </EditForm>
 
             <!-- Box to display the selected office's layout -->

@@ -44,6 +44,12 @@ label {
     display: grid;
     grid-template-columns: 1fr;
 }
+label > * {
+    margin: .5em 0;
+}
+label:focus-within {
+    font-weight: bold;
+}
 
 .btn {
     padding: .7em;
