@@ -40,16 +40,15 @@
         if(selectedOffice.Layout != null)
         {
             string allSeats = "";
-        foreach (Seat seat in selectedOffice.Seats)
-        {
-            if (seat.Layout != null)
+            foreach (Seat seat in selectedOffice.Seats)
             {
-                allSeats += seat.Layout;
+                if (seat.Layout != null)
+                {
+                    allSeats += seat.Layout;
+                }
             }
+            LayoutContent = selectedOffice.Layout.Replace("#", allSeats);
         }
-        LayoutContent = selectedOffice.Layout.Replace("#", allSeats);
-        }
-        
     }
 
     /* Office settings */
@@ -122,8 +121,6 @@
         long officeId = selectedOffice.OfficeId;
         await GetOffices();
         if(saveCurrentSelection) await SelectOffice(officeId);
-
-        // Todo: The localstorage thing to save which office was selected
     }
 }
 <div class="container-content">
