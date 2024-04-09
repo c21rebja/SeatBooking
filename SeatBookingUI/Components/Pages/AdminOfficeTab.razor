@@ -124,12 +124,12 @@
     }
 }
 <div class="container-content">
-    <section>
+    <section class="list-menu">
         <!-- Menu to select office -->
-        <div class="listitem" @onclick="() => selectedOffice = new Office()">Create new office</div>
+        <button class="listitem" tabindex="0" @onclick="() => selectedOffice = new Office()">Create new office</button>
         @foreach (Office office in offices)
         {
-            <div class="listitem" @onclick="() => SelectOffice(office.OfficeId)">@office.Name</div>
+            <button class="listitem" tabindex="0" @onclick="() => SelectOffice(office.OfficeId)">@office.Name</button>
         }
     </section>
 

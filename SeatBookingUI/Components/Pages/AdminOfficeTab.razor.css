@@ -10,12 +10,23 @@
     margin: 1em 0;
 }
 
+.list-menu {
+    display: flex;
+    flex-direction: column;
+}
 .listitem {
     cursor: pointer;
     padding: .5em;
-    margin: .5em;
+    margin: 0 .5em;
     border-radius: 5px;
     border: 1px solid transparent;
+    background: transparent;
+    display: block;
+    font-size: 1rem;
+    text-align: left;
+}
+.listitem:nth-child(1) {
+    margin-top: .5em;
 }
 .listitem:hover {
     border: var(--border);
