@@ -1,25 +1,50 @@
-﻿@page "/login"
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using SeatBookingAPI.Models
 @using System.Text.Json
 @using System.Text.Json.Serialization
+@inject ProtectedSessionStorage ProtectedSessionStore
 @inject IHttpClientFactory ClientFactory
 @inject NavigationManager navigationManager
+@rendermode InteractiveServer
 
 @code {
+    private HttpClient client = new HttpClient();
     private User currentUser = new User();
 
-    private void Login()
+    private bool showInvalidUserError = false;
+
+    protected override void OnInitialized()
     {
-        Console.WriteLine(currentUser.UserId);
-        navigationManager.NavigateTo("/");
+        client = ClientFactory.CreateClient("API");
+    }
+
+    private async void Login()
+    {
+        HttpResponseMessage response = client.GetAsync("api/users/" + currentUser.UserId).Result;
+        if(response.IsSuccessStatusCode) {
+            currentUser = await response.Content.ReadFromJsonAsync<User>() ?? new User();
+            if (currentUser.UserId != 0)
+            {
+                await ProtectedSessionStore.SetAsync("userData", currentUser);
+                navigationManager.NavigateTo("/home", true);
+                return;
+            }
+        }
+        showInvalidUserError = true;
     }
 }
 
 <PageTitle>Login</PageTitle>
 
 <div class="container">
-    <EditForm Model=@currentUser FormName="loginForm" OnSubmit=@Login>
+    <h1 class="container-heading">Login</h1>
+    <EditForm Model=@currentUser OnSubmit=@Login>
         <label>UserId<InputNumber @bind-Value=@currentUser.UserId /></label>
+        @if(showInvalidUserError)
+        {
+            <div>The selected user does not exist, please try again.</div>
+        }
         <input class="btn" type="submit" value="Login">
     </EditForm>
 </div>

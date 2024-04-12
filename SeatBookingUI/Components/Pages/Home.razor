@@ -2,9 +2,11 @@
                            C# Code
 ********************************************************* -->
 
-@page "/"
+@page "/home"
 @using SeatBookingAPI.Models
 @using System.Text.RegularExpressions
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedSessionStorage ProtectedSessionStore
 @inject IHttpClientFactory ClientFactory
 @inject NavigationManager navigationManager
 @inject IJSRuntime JS
@@ -20,40 +22,53 @@
     private IEnumerable<Seat> seats = Array.Empty<Seat>();
     private IEnumerable<Office> offices = Array.Empty<Office>();
 
-    private bool isLoggedIn = true;
     private bool seatModalOpen = false;
     private bool loading = true;
     private string LayoutContent = "";
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        if (!isLoggedIn) navigationManager.NavigateTo("/login");
         client = ClientFactory.CreateClient("API");
-        await GetUser();
-        await GetOffices();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Set the DotNetReferenceObject, to be able to call C# functions from JS
+        if (firstRender)
+        {
+            dotNetObjectReference = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("setDotNetReference", dotNetObjectReference);
+            await GetUser();
+        }
     }
 
     private async Task GetUser ()
     {
-        currentUser = await client.GetFromJsonAsync<User>("api/users/2"); // TEMP hardcoded id
-        if(currentUser != null) await GetOffice(currentUser.OfficeId);
+        var data = await ProtectedSessionStore.GetAsync<User>("userData");
+        if(data.Value != null) {
+            if (data.Value.UserId != 0) {
+                currentUser = data.Value; 
+                await GetOffice(currentUser.OfficeId);
+                await GetOffices();
+                return;
+            }
+        }
+        navigationManager.NavigateTo("/");
     }
 
     private async Task GetOffice(long officeId)
     {
-        Office office = await client.GetFromJsonAsync<Office>("/api/offices/" + officeId);
-        if (office != null)
-        {
-            currentOffice = office;
-            if(office.Seats != null) seats = office.Seats;
+        currentOffice = await client.GetFromJsonAsync<Office>("/api/offices/" + officeId) ?? new Office(); ;
+        if (currentOffice.OfficeId != 0) {
+            if(currentOffice.Seats != null) seats = currentOffice.Seats;
             SetupLayout();
-            loading = false;
         }
     }
 
     private async Task GetOffices()
     {
         offices = await client.GetFromJsonAsync<IEnumerable<Office>>("/api/offices") ?? Enumerable.Empty<Office>(); ;
+        StateHasChanged();
     }
 
     private async Task ChangeOffice(ChangeEventArgs e)
@@ -83,15 +98,8 @@
                 }
             }
             LayoutContent = LayoutContent.Replace("#", allSeats);
-        }
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        // Set the DotNetReferenceObject, to be able to call C# functions from JS
-        if(firstRender) {
-            dotNetObjectReference = DotNetObjectReference.Create(this);
-            await JS.InvokeVoidAsync("setDotNetReference", dotNetObjectReference);
+            loading = false;
+            StateHasChanged();
         }
     }
 
@@ -186,6 +194,7 @@
     @if (@loading) {
         <LoadingSymbol></LoadingSymbol>
     } else {
+        <p>Welcome @currentUser.Name</p>
         @if (offices.Count() != 0)
         {
             <div>
@@ -233,6 +242,8 @@
                     </div>
                 </div>
             </section>
+
         }
     }
 </div>
+

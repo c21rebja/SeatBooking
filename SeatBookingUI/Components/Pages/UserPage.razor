@@ -2,6 +2,8 @@
 @using SeatBookingAPI.Models
 @using System.Text.Json
 @using System.Text.Json.Serialization
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedSessionStorage ProtectedSessionStore
 @inject IHttpClientFactory ClientFactory
 @inject NavigationManager navigationManager
 @rendermode InteractiveServer
@@ -10,22 +12,38 @@
     HttpClient client = new HttpClient();
     private User currentUser = new User();
     private IEnumerable<Office> offices = Array.Empty<Office>();
+    private bool loading = true;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         client = ClientFactory.CreateClient("API");
-        await GetUser();
-        await GetOffices();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender) await GetUser();
     }
 
     private async Task GetUser()
     {
-        currentUser = await client.GetFromJsonAsync<User>("api/users/2"); // TEMP hardcoded id of user
+        var data = await ProtectedSessionStore.GetAsync<User>("userData");
+        if (data.Value != null)
+        {
+            if (data.Value.UserId != 0)
+            {
+                currentUser = data.Value;
+                await GetOffices();
+                return;
+            }
+        }
+        navigationManager.NavigateTo("/");
     }
 
     private async Task GetOffices()
     {
         offices = await client.GetFromJsonAsync<IEnumerable<Office>>("/api/offices") ?? Enumerable.Empty<Office>(); ;
+        loading = false;
+        StateHasChanged();
     }
 
     private async Task UpdateUser()
@@ -36,35 +54,38 @@
             OfficeId = currentUser.OfficeId
         };
         await client.PutAsJsonAsync("/api/users/" + currentUser.UserId, user);
-        Console.WriteLine("put");
     }
 
-    private void Logout()
+    private async Task Logout()
     {
-        // Do logic to logout
-        navigationManager.NavigateTo("/login");
+        await ProtectedSessionStore.SetAsync("userData", new User());
+        navigationManager.NavigateTo("/", true);
     }
 }
 
 <PageTitle>User</PageTitle>
 
 <div class="container">
-    <h1 class="container-heading">User Settings</h1>
-    <EditForm Model=@currentUser OnSubmit=@UpdateUser>
-        <label>
-            Username
-            <InputText @bind-Value=@currentUser.Name />
-        </label>
-        <label>
-            Office
-            <InputSelect @bind-Value=@currentUser.OfficeId>
-                @foreach (Office office in offices)
-                {
-                    <option value="@office.OfficeId">@office.Name</option>
-                }
-            </InputSelect>
-        </label>
-        <input class="btn" type="submit" value="Update Settings">
-    </EditForm>
-    <button class="btn" @onclick=@Logout>Logout</button>
+    @if(@loading) {
+        <LoadingSymbol></LoadingSymbol>
+    } else {
+        <h1 class="container-heading">User Settings</h1>
+        <EditForm Model=@currentUser OnSubmit=@UpdateUser>
+            <label>
+                Username
+                <InputText @bind-Value=@currentUser.Name />
+            </label>
+            <label>
+                Office
+                <InputSelect @bind-Value=@currentUser.OfficeId>
+                    @foreach (Office office in offices)
+                    {
+                        <option value="@office.OfficeId">@office.Name</option>
+                    }
+                </InputSelect>
+            </label>
+            <input class="btn" type="submit" value="Update Settings">
+        </EditForm>
+        <button class="btn" @onclick=@Logout>Logout</button>
+    }
 </div>

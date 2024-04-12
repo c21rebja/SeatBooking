@@ -1,16 +1,43 @@
-﻿<div class="navbar">
-    <NavLink href="" Match="NavLinkMatch.All" title="Home" tabindex="0">Seats App</NavLink>
+﻿@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using SeatBookingAPI.Models
+@inject ProtectedSessionStorage ProtectedSessionStore
+@rendermode InteractiveServer
+
+@code {
+    private bool isAdmin = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender) await CheckIfAdmin();
+    }
+
+    // Check if the currently logged in user has admin rights
+    private async Task CheckIfAdmin ()
+    {
+        var data = await ProtectedSessionStore.GetAsync<User>("userData");
+        if (data.Value != null)
+        {
+            if (data.Value.UserId != 0)
+            {
+                if (data.Value.Role == 0) isAdmin = false;
+                else isAdmin = true;
+                StateHasChanged();
+            }
+        }
+    }
+}
+
+<div class="navbar">
+    <NavLink href="home" Match="NavLinkMatch.All" title="Home" tabindex="0">Seats App</NavLink>
     <section class="nav-links">
-        <NavLink href="admin" title="Admin Settings" tabindex="0">
-            <i class="bi bi-shield-lock"></i>
-        </NavLink>
+        @if(isAdmin)
+        {
+            <NavLink href="admin" title="Admin Settings" tabindex="0">
+                <i class="bi bi-shield-lock"></i>
+            </NavLink>
+        }
         <NavLink href="user" title="Account" tabindex="0">
             <i class="bi bi-person-circle"></i>
         </NavLink>
-        <NavLink href="login" title="Login" tabindex="0">Login</NavLink>
     </section>
 </div>
-
-@code {
-
-}
