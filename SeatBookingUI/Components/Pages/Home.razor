@@ -58,10 +58,14 @@
 
     private async Task GetOffice(long officeId)
     {
-        currentOffice = await client.GetFromJsonAsync<Office>("/api/offices/" + officeId) ?? new Office(); ;
-        if (currentOffice.OfficeId != 0) {
-            if(currentOffice.Seats != null) seats = currentOffice.Seats;
-            SetupLayout();
+        HttpResponseMessage response = client.GetAsync("api/offices/" + officeId).Result;
+        if(response.IsSuccessStatusCode) {
+            currentOffice = await response.Content.ReadFromJsonAsync<Office>() ?? new Office();
+            if (currentOffice.OfficeId != 0)
+            {
+                if (currentOffice.Seats != null) seats = currentOffice.Seats;
+                SetupLayout();
+            }
         }
     }
 

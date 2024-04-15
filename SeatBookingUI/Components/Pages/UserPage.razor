@@ -27,10 +27,8 @@
     private async Task GetUser()
     {
         var data = await ProtectedSessionStore.GetAsync<User>("userData");
-        if (data.Value != null)
-        {
-            if (data.Value.UserId != 0)
-            {
+        if (data.Value != null) {
+            if (data.Value.UserId != 0) {
                 currentUser = data.Value;
                 await GetOffices();
                 return;

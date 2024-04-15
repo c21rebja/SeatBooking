@@ -26,18 +26,18 @@
 
     private async Task SelectOffice(long officeId)
     {
-        Office office = await client.GetFromJsonAsync<Office>("/api/offices/" + officeId);
-        if(office != null)
+        HttpResponseMessage response = client.GetAsync("api/offices/" + officeId).Result;
+        if (response.IsSuccessStatusCode)
         {
-            selectedOffice = office;
-            SetupLayout();
+            selectedOffice = await response.Content.ReadFromJsonAsync<Office>() ?? new Office();
+            if (selectedOffice.OfficeId != 0) SetupLayout();
         }
     }
 
     // Combines the seats and the office layout to display
     private void SetupLayout()
     {
-        if(selectedOffice.Layout != null)
+        if(selectedOffice.Layout != null && selectedOffice.Seats != null)
         {
             string allSeats = "";
             foreach (Seat seat in selectedOffice.Seats)
@@ -158,13 +158,16 @@
             <div class="sectionbreak"></div>
 
             <!-- Edit seats form -->
-            @foreach (Seat seat in selectedOffice.Seats)
+            @if(selectedOffice.Seats != null)
             {
-                <EditForm Model=@seat OnSubmit="() => UpdateSeat(seat)">
-                    <label>Layout - Seat @seat.SeatId<InputTextArea @bind-Value=@seat.Layout /></label>
-                    <input class="btn" type="submit" value="Save" />
-                    <input class="btn" type="button" value="Delete" @onclick="() => DeleteSeat(seat.SeatId)" />
-                </EditForm>
+                @foreach (Seat seat in selectedOffice.Seats)
+                {
+                    <EditForm Model=@seat OnSubmit="() => UpdateSeat(seat)">
+                        <label>Layout - Seat @seat.SeatId<InputTextArea @bind-Value=@seat.Layout /></label>
+                        <input class="btn" type="submit" value="Save" />
+                        <input class="btn" type="button" value="Delete" @onclick="() => DeleteSeat(seat.SeatId)" />
+                    </EditForm>
+                }
             }
 
             <div class="sectionbreak"></div>
