@@ -35,7 +35,8 @@ optgroup {
 }
 
 .layout-content {
-
+    overflow: hidden;
+    background-color: blue;
 }
 
 .modal {
