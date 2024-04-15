@@ -25,6 +25,7 @@
     private bool seatModalOpen = false;
     private bool loading = true;
     private string LayoutContent = "";
+    private long displayedOfficeId = 0;
 
     protected override void OnInitialized()
     {
@@ -47,7 +48,8 @@
         var data = await ProtectedSessionStore.GetAsync<User>("userData");
         if(data.Value != null) {
             if (data.Value.UserId != 0) {
-                currentUser = data.Value; 
+                currentUser = data.Value;
+                displayedOfficeId = currentUser.OfficeId;
                 await GetOffice(currentUser.OfficeId);
                 await GetOffices();
                 return;
@@ -202,11 +204,11 @@
         @if (offices.Count() != 0)
         {
             <div>
-                <select @onchange="ChangeOffice">
+                <select value="@displayedOfficeId" @onchange="ChangeOffice">
                     <optgroup label="Offices">
                         @foreach (Office office in offices)
                         {
-                            <option value="@office.OfficeId" selected="() => isSelected(office.OfficeId)">@office.Name</option>
+                            <option value="@office.OfficeId">@office.Name</option>
                         }
                     </optgroup>
                 </select>
