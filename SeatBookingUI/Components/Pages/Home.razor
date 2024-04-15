@@ -27,9 +27,6 @@
     private string layoutContent = "";
     private long displayedOfficeId = 0;
 
-    //ElementReference layoutContainer;
-    //ElementReference layout;
-
     protected override void OnInitialized()
     {
         client = ClientFactory.CreateClient("API");
@@ -69,7 +66,6 @@
             if (currentOffice.OfficeId != 0)
             {
                 if (currentOffice.Seats != null) seats = currentOffice.Seats;
-                //await JS.InvokeVoidAsync("panZoomLayout", layoutContainer, layout);
                 SetupLayout();
             }
         }
@@ -172,7 +168,7 @@
 }
 
 <!-- ********************************************************
-                        JS Script
+                        JS <script>
 ********************************************************* -->
 <!-- Unfortunately this is necessary, since Blazor isn't able to edit the DOM -->
 <script>
@@ -192,22 +188,18 @@
     }
 
     /* Takes care of panning and zooming the office layout. */
-    
-    var deltaX = 0;
-    var deltaY = 0;
     var scale = 1.0;
-
     var drag = {
         x: 0,
         y: 0,
         state: false
     };
-
     var delta = {
         x: 0,
         y: 0
     };
 
+    // Sets start-values for drag
     function startDrag(e) {
         if(!drag.state) {
             if (e.target.classList.contains('seat')) return;
@@ -217,6 +209,7 @@
         }
     }
 
+    // Moves the move-object, if the object has been zoomed
     function dragging(e) {
         if (scale == 1) {
             if (e.target.classList.contains('seat')) return;
@@ -239,10 +232,12 @@
         }
     }
 
+    // Ends drag if mouse key is released. Set on entire window since cursor is sometimes dragging outside of element
     window.addEventListener('mouseup', function () {
         if (drag.state) drag.state = false;
     })
 
+    // Zooms the element up to x4
     function zoom(event) {
         if (event.target.classList.contains('seat')) return;
         event.preventDefault();
@@ -250,103 +245,6 @@
         scale = Math.min(Math.max(1, scale), 4);
         event.target.style.transform = 'scale(' + scale + ')';
     }
-
-
-
-
-
-    /* Försök 2
-
-    var isDown = false;
-    var offset = { x: 0, y: 0 };
-    var scale = 1;
-    var matrix = new DOMMatrix();
-
-    window.addEventListener("mouseup", function () {
-        isDown = false;
-        console.log(isDown);
-    })
-
-    function startDrag(event) {
-        isDown = true;
-        offset = { x: event.offsetX, y: event.offsetY };
-        console.log(isDown, offset);
-    }
-
-    function dragging(event) {
-        if (isDown) {
-            //if()
-
-            var transform = event.target.style.getPropertyValue('transform');
-            console.log(transform);
-
-            //return;
-
-            let tx = event.offsetX - offset.x;
-            let ty = event.offsetY - offset.y;
-            offset = { x: event.offsetX, y: event.offsetY };
-            console.log(offset);
-            
-            
-            event.target.style.transform = 'translate(' + tx + 'px, ' + ty + 'px)';
-            
-            //matrix.preMultiplySelf(new DOMMatrix().translateSelf(tx, ty));
-            //console.log(matrix.toString());
-
-            //event.target.style.transform = matrix.toString();
-        }
-    }
-
-    function zoom(event) {
-        event.preventDefault();
-        scale += event.deltaY * -0.01;
-        scale = Math.min(Math.max(1, scale), 4);
-        event.target.style.transform = 'scale('+ scale +')';
-        console.log(scale);
-    }*/
-
-    //
-    /* Försök 1
-    function panZoomLayout() {        
-        const layout = document.getElementById('layout');
-        const viewPort = document.getElementById('layout-content');
-
-        let drag = false;
-        let offset = { x: 0, y: 0 };
-        let factor = .1;
-        const matrix = new DOMMatrix();
-
-        if (layout == null) {
-            console.log(layout);
-            console.log('null');
-            return;
-        }
-
-        // Start drag
-        layout.addEventListener('pointerdown', function (event) {
-            drag = true;
-            offset = { x: event.offsetX, y: event.offsetY };
-        });
-
-        // Dragging
-        layout.addEventListener('pointermove', function (event) {
-            if (drag) {
-                let tx = event.offsetX - offset.x;
-                let ty = event.offsetY - offset.y;
-                offset = { x: event.offsetX, y: event.offsetY };
-                matrix.preMultiplySelf(new DOMMatrix()
-                    .translateSelf(tx, ty));
-                viewPort.style.transform = matrix.toString();
-            }
-        });
-
-        // Stop drag
-        layout.addEventListener('pointerup', function (event) {
-            drag = false;
-        });
-
-        // Zoom
-    }*/
 </script>
 
 <!-- ********************************************************
