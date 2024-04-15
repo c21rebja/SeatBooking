@@ -34,8 +34,19 @@ optgroup {
     font-size: 1rem;
 }
 
-.layout-content {
+.layout-parent {
+    position: relative;
+    height: 500px;
+    width: 700px;
     overflow: hidden;
+    margin: auto;
+}
+#move-object {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 700px;
+    height: 500px;
     background-color: blue;
 }
 
