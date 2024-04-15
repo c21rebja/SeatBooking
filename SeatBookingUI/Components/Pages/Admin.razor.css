@@ -13,3 +13,7 @@
 .heading:hover {
     background-color: rgb(var(--primary-500));
 }
+
+.container-heading {
+    padding: 0;
+}

@@ -43,7 +43,7 @@ form {
     font-size: 2rem;
     border-bottom: var(--border);
     font-weight: normal;
-    padding: 0 1em;
+    padding: .2em .5em 0 .5em;
 }
 
 label {
