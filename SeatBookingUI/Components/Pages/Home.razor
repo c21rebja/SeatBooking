@@ -245,6 +245,16 @@
         scale = Math.min(Math.max(1, scale), 4);
         event.target.style.transform = 'scale(' + scale + ')';
     }
+
+    // Resets draggable element
+    function Reset() {
+        scale = 1;
+        elem = document.getElementById('move-object');
+        elem.style.transform = 'scale(' + scale + ')';
+        elem.style.left = '0px';
+        elem.style.top = '0px';
+
+    }
 </script>
 
 <!-- ********************************************************
@@ -277,7 +287,8 @@
                 <div id="move-object" onmousedown="startDrag(event)" onmousemove="dragging(event)" onwheel="zoom(event)">
                     @((MarkupString)layoutContent)
                 </div>
-            </div>
+             </div>
+            <button class="btn" onclick="Reset()">Reset</button>
         }
         @if (@seatModalOpen)
         {
