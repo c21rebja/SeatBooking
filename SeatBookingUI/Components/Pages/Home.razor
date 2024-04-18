@@ -203,8 +203,8 @@
     function startDrag(e) {
         if(!drag.state) {
             if (e.target.classList.contains('seat')) return;
-            drag.x = e.pageX;
-            drag.y = e.pageY;
+            drag.x = e.clientX;
+            drag.y = e.clientY;
             drag.state = true;
         }
     }
@@ -253,7 +253,54 @@
         elem.style.transform = 'scale(' + scale + ')';
         elem.style.left = '0px';
         elem.style.top = '0px';
+    }
 
+    // Simulates movement of the element, when pressing a button
+    function SimulateMove() {
+        var start = performance.timeOrigin + performance.now();
+        console.log("start: " + start);
+        
+        var moveObject = document.getElementById("move-object");
+        wheelEvent(moveObject);
+        mouseDownEvent(moveObject);
+        moveEvent(moveObject);
+        simulateEvent(moveObject, "mouseup");
+
+        setTimeout(() => {
+            var end = performance.timeOrigin + performance.now();
+            console.log("end: " + end);
+            var elapsedTime = end - start;
+            console.log("elapsed: " + elapsedTime);
+        }, 100);
+    }
+
+    function simulateEvent(node, eventType) {
+        var event = new Event(eventType, { bubbles: true, cancelable: true });
+        node.dispatchEvent(event);
+    }
+
+    function wheelEvent(node) {
+        var ev = new MouseEvent("wheel", {
+            bubbles: true,
+            cancelable: true,
+        })
+        ev.deltaY = -50;
+        node.dispatchEvent(ev);
+    }
+
+    function mouseDownEvent(node) {
+        let moveev = new MouseEvent("mousedown", { bubbles: true , cancelable: true });
+        node.dispatchEvent(moveev);
+    }
+
+    function moveEvent(node) { 
+        let moveev = new MouseEvent("mousemove", {
+            // Controls the position the element should move to
+            clientX: 200,
+            clientY: 300,
+            bubbles: true
+        });
+        node.dispatchEvent(moveev);
     }
 </script>
 
@@ -289,6 +336,7 @@
                 </div>
              </div>
             <button class="btn" onclick="Reset()">Reset</button>
+            <button class="btn" onclick="SimulateMove()">Move</button>
         }
         @if (@seatModalOpen)
         {
