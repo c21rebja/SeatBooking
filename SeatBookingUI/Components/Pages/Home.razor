@@ -258,7 +258,6 @@
     // Simulates movement of the element, when pressing a button
     function SimulateMove() {
         var start = performance.timeOrigin + performance.now();
-        console.log("start: " + start);
         
         var moveObject = document.getElementById("move-object");
         wheelEvent(moveObject);
@@ -268,10 +267,23 @@
 
         setTimeout(() => {
             var end = performance.timeOrigin + performance.now();
-            console.log("end: " + end);
             var elapsedTime = end - start;
-            console.log("elapsed: " + elapsedTime);
+
+            var data = { key: "spaljen", time: elapsedTime };
+            saveToLocalStorage(data);
+            console.log(data);
         }, 100);
+    }
+
+    function saveToLocalStorage(data) {
+        if (localStorage.getItem('dataArray')) {
+            var a = [];
+            // Parse the serialized data back into an aray of objects
+            a = JSON.parse(localStorage.getItem('dataArray')) || [];
+            a.push(data);
+            // Re-serialize the array back into a string and store it in localStorage
+            localStorage.setItem('dataArray', JSON.stringify(a));
+        } else console.log("no local storage item!");
     }
 
     function simulateEvent(node, eventType) {
@@ -335,8 +347,8 @@
                     @((MarkupString)layoutContent)
                 </div>
              </div>
-            <button class="btn" onclick="Reset()">Reset</button>
-            <button class="btn" onclick="SimulateMove()">Move</button>
+            <button id="reset-button" class="btn" onclick="Reset()">Reset</button>
+            <button id="move-button" class="btn" onclick="SimulateMove()">Move</button>
         }
         @if (@seatModalOpen)
         {
