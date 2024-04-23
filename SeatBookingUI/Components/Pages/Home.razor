@@ -269,21 +269,19 @@
             var end = performance.timeOrigin + performance.now();
             var elapsedTime = end - start;
 
-            var data = { key: "spaljen", time: elapsedTime };
-            saveToLocalStorage(data);
-            console.log(data);
+            //var data = { key: "svg", time: elapsedTime };
+            saveToLocalStorage(elapsedTime);
+            console.log(elapsedTime);
         }, 100);
     }
 
     function saveToLocalStorage(data) {
-        if (localStorage.getItem('dataArray')) {
-            var a = [];
-            // Parse the serialized data back into an aray of objects
-            a = JSON.parse(localStorage.getItem('dataArray')) || [];
-            a.push(data);
-            // Re-serialize the array back into a string and store it in localStorage
-            localStorage.setItem('dataArray', JSON.stringify(a));
-        } else console.log("no local storage item!");
+        var a = [];
+        // Parse the serialized data back into an aray of objects
+        a = JSON.parse(localStorage.getItem('dataArray')) || [];
+        a.push(data);
+        // Re-serialize the array back into a string and store it in localStorage
+        localStorage.setItem('dataArray', JSON.stringify(a));
     }
 
     function simulateEvent(node, eventType) {
