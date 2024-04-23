@@ -247,7 +247,7 @@
     }
 
     // Resets draggable element
-    function Reset() {
+    function reset() {
         scale = 1;
         elem = document.getElementById('move-object');
         elem.style.transform = 'scale(' + scale + ')';
@@ -256,7 +256,7 @@
     }
 
     // Simulates movement of the element, when pressing a button
-    function SimulateMove() {
+    function simulateMove() {
         var start = performance.timeOrigin + performance.now();
         
         var moveObject = document.getElementById("move-object");
@@ -345,8 +345,8 @@
                     @((MarkupString)layoutContent)
                 </div>
              </div>
-            <button id="reset-button" class="btn" onclick="Reset()">Reset</button>
-            <button id="move-button" class="btn" onclick="SimulateMove()">Move</button>
+            <button id="reset-button" class="btn" onclick="reset()">Reset</button>
+            <button id="move-button" class="btn" onclick="simulateMove()">Move</button>
         }
         @if (@seatModalOpen)
         {
