@@ -1,32 +1,42 @@
-﻿@using SeatBookingAPI.Models
+﻿@page "/data"
+@using SeatBookingAPI.Models
 @inject IHttpClientFactory ClientFactory
 @rendermode InteractiveServer
 
 @code {
     /* Generate two layouts per press, one SVG and one box 
          * Hopefully won't need that many layouts if the range is great enough
-         * Think small (20), medium (60), large (150), xlarge (500)
+         * Think small (20, size 50), medium (60, size 50), large (150, size 40), xlarge (500, size 20)
          * These values have to be discussed I guess. I don't know if I should go to like 1000 or something....
         */
 
     HttpClient client = new HttpClient();
+    private bool loading = false;
 
-    private int elementNumber = 0; // The number of seats that will be added to the layout
-    private string size = "Small"; // Should correspond to the amount of seats added
+    private int elementNumber = 500; // The number of seats that will be added to the layout
+    private string size = "XLarge"; // Should correspond to the amount of seats added
+    private int elementSize = 20; // The height and width of a seat
 
-    private string boxOfficeLayout = "";
-    private string SVGOfficeLayout = "";
+    private int layoutWidth = 700; // The width of the parent (officelayout)
+    private int layoutHeight = 500; // The height of the parent (officelayout)
+
+    // Office layouts (can be the same for each office)
+    private string boxOfficeLayout = "<div style='pointer-events: none; position: relative;'>#</div>";
+    private string SVGOfficeLayout = "<svg style='pointer-events: none; overflow: visible'>#</svg>";
 
     protected override async Task OnInitializedAsync()
     {
         client = ClientFactory.CreateClient("API");
     }
 
+    // Function called by the button, starts the generation
     private async Task StartGeneration() {
+        loading = true;
         await Generation(0);
         await Generation(1);
     }
 
+    // Generate the office and the specified number of seats
     private async Task Generation(int type)
     {
         string name, layout = "";
@@ -55,44 +65,47 @@
             }
 
             Console.WriteLine("Office created " + type);
+
+            int xpos = 0;
+            int ypos = 0;
             for(int i = 0; i < elementNumber; i++)
             {
-                string genLayout = GenerateLayout(type);
+                string genLayout = GenerateLayout(type, xpos, ypos);
                 SeatDTO seat = new()
-                    {
-                        Layout = genLayout,
-                        State = 0,
-                        OfficeId = newOffice.OfficeId
-                    };
+                {
+                    Layout = genLayout,
+                    State = 0,
+                    OfficeId = newOffice.OfficeId
+                };
                 await client.PostAsJsonAsync("/api/seats", seat);
-                Console.WriteLine("Seat added " + type);
+
+                xpos += elementSize + 5;
+                if(xpos + elementSize > layoutWidth) {
+                    xpos = 0;
+                    ypos += elementSize + 5;
+                }
             }
+
+            loading = false;
         }
     }
 
-    private String GenerateLayout(int type)
+    // Seat layout
+    private String GenerateLayout(int type, int xpos, int ypos)
     {
         if (type == 0)
-        {
-
-            return "";
-        }
+            return "<div # class='seat' style='display: inline-block; width: " + elementSize + "px; height: " + elementSize + "px; margin: 5px; border: 1px solid black; position: absolute; top: " + ypos + "px; left: " + xpos + "px; pointer-events: auto;'></div>";
         else
-        {
-            return "";
-        }
+            return "<rect # class='seat' width='" + elementSize + "' height='" + elementSize + "' x='" + xpos + "' y='" + ypos + "' style='pointer-events: auto;'/>";
     }
-
-
-    /* Step by step:
-     * Create office
-     * Get office id
-     * add no of seats, with the office id
-     */
 }
 
-<div>
-    <h3>DataGeneration</h3>
-
-    <button @onclick="StartGeneration">Start Generation</button>
-</div>
+@if(loading)
+{
+    <LoadingSymbol></LoadingSymbol>
+} else {
+    <div>
+        <h3>Data Generation</h3>
+        <button class="btn" @onclick="StartGeneration">Start Generation</button>
+    </div>
+}
