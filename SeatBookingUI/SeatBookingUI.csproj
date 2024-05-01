@@ -11,12 +11,21 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Content Remove="Components\Pages\DataGeneration.razor" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <Watch Remove="Components\Pages\Admin.razor" />
 	  <Watch Remove="Components\Pages\AdminOfficeTab.razor" />
 	  <Watch Remove="Components\Pages\AdminUserTab.razor" />
+	  <Watch Remove="Components\Pages\DataGeneration.razor" />
 	  <Watch Remove="Components\Pages\LoadingSymbol.razor" />
 	  <Watch Remove="Components\Pages\LoginPage.razor" />
 	  <Watch Remove="Components\Pages\UserPage.razor" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="Components\Pages\DataGeneration.razor" />
 	</ItemGroup>
 
 	<ItemGroup>

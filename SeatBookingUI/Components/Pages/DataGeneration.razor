@@ -1,0 +1,98 @@
+﻿@using SeatBookingAPI.Models
+@inject IHttpClientFactory ClientFactory
+@rendermode InteractiveServer
+
+@code {
+    /* Generate two layouts per press, one SVG and one box 
+         * Hopefully won't need that many layouts if the range is great enough
+         * Think small (20), medium (60), large (150), xlarge (500)
+         * These values have to be discussed I guess. I don't know if I should go to like 1000 or something....
+        */
+
+    HttpClient client = new HttpClient();
+
+    private int elementNumber = 0; // The number of seats that will be added to the layout
+    private string size = "Small"; // Should correspond to the amount of seats added
+
+    private string boxOfficeLayout = "";
+    private string SVGOfficeLayout = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        client = ClientFactory.CreateClient("API");
+    }
+
+    private async Task StartGeneration() {
+        await Generation(0);
+        await Generation(1);
+    }
+
+    private async Task Generation(int type)
+    {
+        string name, layout = "";
+        if(type == 0) {
+            name = "Box " + size;
+            layout = boxOfficeLayout;
+        } else {
+            name = "SVG " + size;
+            layout = SVGOfficeLayout;
+        }
+
+        OfficeDTO office = new()
+        {
+            Name = name,
+            Layout = layout
+        };
+
+        HttpResponseMessage response = client.PostAsJsonAsync("/api/offices", office).Result;
+        if (response.IsSuccessStatusCode)
+        {
+            Office newOffice = await response.Content.ReadFromJsonAsync<Office>() ?? new Office();
+            if (newOffice.OfficeId == 0)
+            {
+                Console.WriteLine("Office wasn't created");
+                return;
+            }
+
+            Console.WriteLine("Office created " + type);
+            for(int i = 0; i < elementNumber; i++)
+            {
+                string genLayout = GenerateLayout(type);
+                SeatDTO seat = new()
+                    {
+                        Layout = genLayout,
+                        State = 0,
+                        OfficeId = newOffice.OfficeId
+                    };
+                await client.PostAsJsonAsync("/api/seats", seat);
+                Console.WriteLine("Seat added " + type);
+            }
+        }
+    }
+
+    private String GenerateLayout(int type)
+    {
+        if (type == 0)
+        {
+
+            return "";
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+
+    /* Step by step:
+     * Create office
+     * Get office id
+     * add no of seats, with the office id
+     */
+}
+
+<div>
+    <h3>DataGeneration</h3>
+
+    <button @onclick="StartGeneration">Start Generation</button>
+</div>
