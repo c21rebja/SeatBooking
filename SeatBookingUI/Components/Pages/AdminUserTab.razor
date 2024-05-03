@@ -1,7 +1,10 @@
 ﻿@using SeatBookingAPI.Models
 @using System.Text.Json
 @using System.Text.Json.Serialization
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedSessionStorage ProtectedSessionStore
 @inject IHttpClientFactory ClientFactory
+@inject NavigationManager navigationManager
 @rendermode InteractiveServer
 
 @code {
@@ -9,12 +12,28 @@
     private IEnumerable<User> users = Array.Empty<User>();
     private IEnumerable<Office> offices = Array.Empty<Office>();
     User selectedUser = new User();
+    User thisUser = new User();
 
     protected override async Task OnInitializedAsync()
     {
         client = ClientFactory.CreateClient("API");
         await GetUsers();
         await GetOffices();
+        await GetThisUser();
+    }
+
+    private async Task GetThisUser()
+    {
+        var data = await ProtectedSessionStore.GetAsync<User>("userData");
+        if (data.Value != null)
+        {
+            if (data.Value.UserId != 0)
+            {
+                thisUser = data.Value;
+                return;
+            }
+        }
+        navigationManager.NavigateTo("/");
     }
 
     private async Task GetUsers()
@@ -37,6 +56,18 @@
         };
         await client.PutAsJsonAsync("/api/users/" + selectedUser.UserId, user);
         await client.PutAsJsonAsync("/api/users/" + selectedUser.UserId + "/admin", new UserRole { Role = selectedUser.Role });
+
+        await UpdateThisUser();
+    }
+
+    // If the updated user is this user, 
+    private async Task UpdateThisUser()
+    {
+        if (thisUser.UserId == selectedUser.UserId)
+        {
+            await ProtectedSessionStore.SetAsync("userData", selectedUser);
+            await GetThisUser();
+        }
     }
 
     private async Task CreateUser()

@@ -52,6 +52,7 @@
             OfficeId = currentUser.OfficeId
         };
         await client.PutAsJsonAsync("/api/users/" + currentUser.UserId, user);
+        await ProtectedSessionStore.SetAsync("userData", currentUser);
     }
 
     private async Task Logout()
