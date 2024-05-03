@@ -6,6 +6,7 @@
 @using SeatBookingAPI.Models
 @using System.Text.RegularExpressions
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using System.Diagnostics
 @inject ProtectedSessionStorage ProtectedSessionStore
 @inject IHttpClientFactory ClientFactory
 @inject NavigationManager navigationManager
@@ -22,6 +23,8 @@
     private IEnumerable<Seat> seats = Array.Empty<Seat>();
     private IEnumerable<Office> offices = Array.Empty<Office>();
 
+    private Stopwatch sw = new Stopwatch();
+
     private bool seatModalOpen = false;
     private bool loading = true;
     private string layoutContent = "";
@@ -30,6 +33,7 @@
     protected override void OnInitialized()
     {
         client = ClientFactory.CreateClient("API");
+        sw.Start();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -66,7 +70,7 @@
             if (currentOffice.OfficeId != 0)
             {
                 if (currentOffice.Seats != null) seats = currentOffice.Seats;
-                SetupLayout();
+                await SetupLayout();
             }
         }
     }
@@ -83,7 +87,7 @@
     }
 
     // Adds necessary onclick functions and classes to the seats
-    private void SetupLayout ()
+    private async Task SetupLayout ()
     {
         if(currentOffice.Layout != null)
         {
@@ -105,6 +109,11 @@
             }
             layoutContent = layoutContent.Replace("#", allSeats);
             loading = false;
+
+            // Save the time it took to load the page, to mkae measurements
+            sw.Stop();
+            await SaveLoadTime(sw.Elapsed.TotalNanoseconds);
+
             StateHasChanged();
         }
     }
@@ -144,7 +153,7 @@
         seatModalOpen = false;
         await GetOffice(currentUser.OfficeId); // TODO: This can be done better?
         selectedSeat = new Seat();
-        SetupLayout();
+        await SetupLayout();
 
         loading = false;
     }
@@ -164,6 +173,14 @@
     public void Dispose()
     {
         dotNetObjectReference?.Dispose();
+    }
+
+    // Code for measurement of load time
+    private async Task SaveLoadTime(double elapsedTime)
+    {
+        double elapsedInMs = elapsedTime / 1000000;
+        Console.WriteLine(elapsedInMs);
+        await JS.InvokeVoidAsync("saveToLocalStorage", elapsedInMs);
     }
 }
 
