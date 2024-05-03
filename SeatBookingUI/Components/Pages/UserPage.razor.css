@@ -1,0 +1,7 @@
+﻿.btn-container {
+    display: flex;
+    justify-content: space-between;
+}
+.btn {
+    margin: 1em 0;
+}
