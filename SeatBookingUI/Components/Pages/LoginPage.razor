@@ -13,6 +13,7 @@
     private User currentUser = new User();
 
     private bool showInvalidUserError = false;
+    private bool loading = false;
 
     protected override void OnInitialized()
     {
@@ -21,6 +22,7 @@
 
     private async void Login()
     {
+        loading = true;
         HttpResponseMessage response = client.GetAsync("api/users/" + currentUser.UserId).Result;
         if(response.IsSuccessStatusCode) {
             currentUser = await response.Content.ReadFromJsonAsync<User>() ?? new User();
@@ -32,22 +34,26 @@
             }
         }
         showInvalidUserError = true;
+        loading = false;
     }
 }
 
 <PageTitle>Login</PageTitle>
-
-<div class="container">
-    <h1 class="container-heading">Login</h1>
-    <EditForm Model=@currentUser OnSubmit=@Login>
-        <label>UserId<InputNumber @bind-Value=@currentUser.UserId /></label>
-        @if(showInvalidUserError)
-        {
-            <div>The selected user does not exist, please try again.</div>
-        }
-        <input class="btn" type="submit" value="Login">
-    </EditForm>
-</div>
+@if(loading) {
+    <LoadingSymbol></LoadingSymbol>
+} else {
+    <div class="container">
+        <h1 class="container-heading">Login</h1>
+        <EditForm Model=@currentUser OnSubmit=@Login>
+            <label>UserId<InputNumber @bind-Value=@currentUser.UserId /></label>
+            @if(showInvalidUserError)
+            {
+                <div>The selected user does not exist, please try again.</div>
+            }
+            <input class="btn" type="submit" value="Login">
+        </EditForm>
+    </div>
+}
 
 
 
