@@ -24,10 +24,12 @@
 }
 
 select {
-    font-size: 2rem;
-    background-color: transparent;
+    font-size: 1.5rem;
+    background-color: rgb(var(--primary-500));
     border: none;
     cursor: pointer;
+    padding: 0 .5em;
+    margin: 1em 0 .5em 0;
 }
 
 optgroup {
@@ -40,6 +42,8 @@ optgroup {
     width: 700px;
     overflow: hidden;
     margin: auto;
+    background-color: rgba(var(--primary-500), 0.5);
+    border: solid 5px rgb(var(--primary-900));
 }
 #move-object {
     position: absolute;
@@ -47,7 +51,7 @@ optgroup {
     left: 0px;
     width: 700px;
     height: 500px;
-    background-color: blue;
+    background-color: rgba(var(--primary-500), 0.5);
 }
 
 .modal {
@@ -69,4 +73,18 @@ optgroup {
 .modal-content {
     padding: 0 1em 1em 1em;
     text-align: center;
+}
+
+
+.welcome-msg {
+    text-align: center;
+    font-size: 1.5rem;
+    padding: 1em 0 0 0;
+    margin: 0;
+}
+
+.inner-container {
+    width: 700px;
+    margin: auto;
+    padding: 0 0 1em 0;
 }

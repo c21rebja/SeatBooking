@@ -338,64 +338,67 @@
 <PageTitle>Home</PageTitle>
 
 <div class="container">
-    @if (@loading) {
-        <LoadingSymbol></LoadingSymbol>
-    } else {
-        <p>Welcome @currentUser.Name</p>
-        @if (offices.Count() != 0)
-        {
-            <div>
-                <select value="@displayedOfficeId" @onchange="ChangeOffice">
-                    <optgroup label="Offices">
-                        @foreach (Office office in offices)
-                        {
-                            <option value="@office.OfficeId">@office.Name</option>
-                        }
-                    </optgroup>
-                </select>
-            </div>
-        }
-        @if (layoutContent != "")
-        {
-            <div class="layout-parent">
-                <div id="move-object" onmousedown="startDrag(event)" onmousemove="dragging(event)" onwheel="zoom(event)">
-                    @((MarkupString)layoutContent)
-                </div>
-             </div>
-            <button id="reset-button" class="btn" onclick="reset()">Reset</button>
-            <button id="move-button" class="btn" onclick="simulateMove()">Move</button>
-        }
-        @if (@seatModalOpen)
-        {
-            <section class="modal">
+    <div class="inner-container">
+        @if (@loading) {
+            <LoadingSymbol></LoadingSymbol>
+        } else {
+            <p class="welcome-msg">Welcome @currentUser.Name</p>
+            @if (offices.Count() != 0)
+            {
                 <div>
-                    <h2 class="container-heading">Seat Options</h2>
-                    <div class="modal-content">
-                        <p>
-                            Current status:
-                            @if (selectedSeat.State == 0)
+                    <span>Select your office: </span>
+                    <select value="@displayedOfficeId" @onchange="ChangeOffice">
+                        <optgroup label="Offices">
+                            @foreach (Office office in offices)
                             {
-                                <span>Avaliable</span>
+                                <option value="@office.OfficeId">@office.Name</option>
+                            }
+                        </optgroup>
+                    </select>
+                </div>
+            }
+            @if (layoutContent != "")
+            {
+                <div class="layout-parent">
+                    <div id="move-object" onmousedown="startDrag(event)" onmousemove="dragging(event)" onwheel="zoom(event)">
+                        @((MarkupString)layoutContent)
+                    </div>
+                 </div>
+                <button id="reset-button" class="btn" onclick="reset()">Reset</button>
+                <button id="move-button" class="btn" onclick="simulateMove()">Move</button>
+            }
+            @if (@seatModalOpen)
+            {
+                <section class="modal">
+                    <div>
+                        <h2 class="container-heading">Seat Options</h2>
+                        <div class="modal-content">
+                            <p>
+                                Current status:
+                                @if (selectedSeat.State == 0)
+                                {
+                                    <span>Avaliable</span>
+                                }
+                                else
+                                {
+                                    <span>Booked</span>
+                                }
+                            </p>
+                            @if (selectedSeat.UserId == currentUser.UserId)
+                            {
+                                <button @onclick="() => BookSeat(false)" class="btn">Deselect Seat</button>
                             }
                             else
                             {
-                                <span>Booked</span>
+                                <button @onclick="() => BookSeat(true)" disabled=@isDisabled() class="btn">Select Seat</button>
                             }
-                        </p>
-                        @if (selectedSeat.UserId == currentUser.UserId)
-                        {
-                            <button @onclick="() => BookSeat(false)" class="btn">Deselect Seat</button>
-                        }
-                        else
-                        {
-                            <button @onclick="() => BookSeat(true)" disabled=@isDisabled() class="btn">Select Seat</button>
-                        }
 
-                        <button @onclick="() => seatModalOpen = false" class="btn">Close</button>
+                            <button @onclick="() => seatModalOpen = false" class="btn">Close</button>
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            }
         }
-    }
+    </div>
 </div>
 
