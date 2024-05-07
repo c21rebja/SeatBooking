@@ -6,16 +6,16 @@
 @code {
     /* Generate two layouts per press, one SVG and one box 
          * Hopefully won't need that many layouts if the range is great enough
-         * Think small (20, size 50), medium (60, size 50), large (150, size 40), xlarge (500, size 20)
+         * Think small (20, size 50), medium (60, size 50), large (150, size 40), xlarge (500, size 20), xxlarge (1000, 13)
          * These values have to be discussed I guess. I don't know if I should go to like 1000 or something....
         */
 
     HttpClient client = new HttpClient();
     private bool loading = false;
 
-    private int elementNumber = 1000; // The number of seats that will be added to the layout
-    private string size = "XXLarge"; // Should correspond to the amount of seats added
-    private int elementSize = 13; // The height and width of a seat
+    private int elementNumber = 10; // The number of seats that will be added to the layout
+    private string size = "Test"; // Should correspond to the amount of seats added
+    private int elementSize = 40; // The height and width of a seat
 
     private int layoutWidth = 700; // The width of the parent (officelayout)
     private int layoutHeight = 500; // The height of the parent (officelayout)

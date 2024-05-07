@@ -41,7 +41,7 @@ namespace SeatBookingAPI.Migrations
                         column: x => x.OfficeId,
                         principalTable: "Office",
                         principalColumn: "OfficeId",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(

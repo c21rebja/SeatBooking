@@ -274,25 +274,47 @@
 
     // Simulates movement of the element, when pressing a button
     function simulateMove() {
-        var start = performance.timeOrigin + performance.now();
-        
         var moveObject = document.getElementById("move-object");
-        wheelEvent(moveObject);
-        mouseDownEvent(moveObject);
-        moveEvent(moveObject);
-        simulateEvent(moveObject, "mouseup");
+        wheelEvent(moveObject); // Zoom in first to be able to move
+        setTimeout(() => {
+            var start = performance.timeOrigin + performance.now();
 
+            // Move the object
+            mouseDownEvent(moveObject);
+            moveEvent(moveObject);
+            simulateEvent(moveObject, "mouseup");
+
+            setTimeout(() => {
+                var end = performance.timeOrigin + performance.now();
+                var elapsedTime = end - start;
+
+                saveToLocalStorage(elapsedTime);
+                console.log(elapsedTime);
+            }, 100);
+        }, 200);
+        
+    }
+
+    // Simulates zoom of the element, when pressing a button
+    function simulateZoom() {
+        var moveObject = document.getElementById("move-object");
+
+        var start = performance.timeOrigin + performance.now();
+
+        wheelEvent(moveObject);
+
+        // Zoom in on the object
         setTimeout(() => {
             var end = performance.timeOrigin + performance.now();
             var elapsedTime = end - start;
 
-            //var data = { key: "svg", time: elapsedTime };
             saveToLocalStorage(elapsedTime);
             console.log(elapsedTime);
         }, 100);
     }
 
     function saveToLocalStorage(data) {
+        console.log("saved");
         var a = [];
         // Parse the serialized data back into an aray of objects
         a = JSON.parse(localStorage.getItem('dataArray')) || [];
@@ -311,7 +333,7 @@
             bubbles: true,
             cancelable: true,
         })
-        ev.deltaY = -50;
+        ev.deltaY = -200;
         node.dispatchEvent(ev);
     }
 
@@ -323,8 +345,8 @@
     function moveEvent(node) { 
         let moveev = new MouseEvent("mousemove", {
             // Controls the position the element should move to
-            clientX: 200,
-            clientY: 300,
+            clientX: 500,
+            clientY: 500,
             bubbles: true
         });
         node.dispatchEvent(moveev);
@@ -366,6 +388,7 @@
                  </div>
                 <button id="reset-button" class="btn" onclick="reset()">Reset</button>
                 <button id="move-button" class="btn" onclick="simulateMove()">Move</button>
+                <button id="zoom-button" class="btn" onclick="simulateZoom()">Zoom</button>
             }
             @if (@seatModalOpen)
             {
