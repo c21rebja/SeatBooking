@@ -180,7 +180,7 @@
     {
         double elapsedInMs = elapsedTime / 1000000;
         Console.WriteLine(elapsedInMs);
-        await JS.InvokeVoidAsync("saveToLocalStorage", elapsedInMs);
+        //await JS.InvokeVoidAsync("saveToLocalStorage", elapsedInMs);
     }
 }
 
@@ -256,7 +256,7 @@
 
     // Zooms the element up to x4
     function zoom(event) {
-        if (event.target.classList.contains('seat')) return;
+        //if (event.target.classList.contains('seat')) return; // Commented out for the updated zoom measurement
         event.preventDefault();
         scale += event.deltaY * -0.01;
         scale = Math.min(Math.max(1, scale), 4);
@@ -270,6 +270,14 @@
         elem.style.transform = 'scale(' + scale + ')';
         elem.style.left = '0px';
         elem.style.top = '0px';
+    }
+    
+    // Resets zoom
+    function resetUpdatedZoom() {
+        seats = document.getElementsByClassName('seat');
+        for(let seat of seats) {
+            seat.style.transform = 'scale(1)';
+        }
     }
 
     // Simulates movement of the element, when pressing a button
@@ -311,6 +319,27 @@
             saveToLocalStorage(elapsedTime);
             console.log(elapsedTime);
         }, 100);
+    }
+
+    // Simulates the zoom, but transforms each seat instead of the parent container
+    function simulatedZoomUpdated() {
+        var seats = document.getElementsByClassName('seat');
+
+        var start = performance.timeOrigin + performance.now();
+
+        for (let seat of seats) {
+            wheelEvent(seat);
+        }
+
+        // Zoom in on the object
+        setTimeout(() => {
+            var end = performance.timeOrigin + performance.now();
+            var elapsedTime = end - start;
+
+            saveToLocalStorage(elapsedTime);
+            console.log(elapsedTime);
+        }, 100);
+
     }
 
     function saveToLocalStorage(data) {
@@ -386,9 +415,17 @@
                         @((MarkupString)layoutContent)
                     </div>
                  </div>
-                <button id="reset-button" class="btn" onclick="reset()">Reset</button>
-                <button id="move-button" class="btn" onclick="simulateMove()">Move</button>
-                <button id="zoom-button" class="btn" onclick="simulateZoom()">Zoom</button>
+                 <div style="display: flex; justify-content: space-between;">
+                    <div>
+                        <button id="reset-button" class="btn" onclick="reset()">Reset</button>
+                        <button id="move-button" class="btn" onclick="simulateMove()">Move</button>
+                        <button id="zoom-button" class="btn" onclick="simulateZoom()">Zoom</button>
+                    </div>
+                    <div>
+                        <button id="zoom-upd-button" class="btn" onclick="simulatedZoomUpdated()">Zoom Updated</button>
+                        <button id="reset-upd-button" class="btn" onclick="resetUpdatedZoom()">Reset Updated</button>
+                    </div>
+                </div>
             }
             @if (@seatModalOpen)
             {
